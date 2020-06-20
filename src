@@ -1,0 +1,3482 @@
+
+#include<stdio.h>
+#include<string.h>
+#include<stdlib.h>
+#include<malloc.h>
+#include<math.h>
+#include<time.h>
+#include<graphics.h>
+#include<ege/sys_edit.h>
+
+#define OK 1
+#define ERROR -1
+
+typedef int status;
+
+typedef struct CarInfo {
+	int CarID;
+	char CarNumber[10];
+	char TypeNumber;
+	char CarName[20];
+	char Gear[15];
+	float DailyRent;
+	char RentalStatus;
+	int RentalDays;
+	int orderflag = 0;   
+	struct CarInfo* next;     //指向下一个车辆信息结点
+	struct OrderInfo* order;     //指向该车租车订单结点
+}CarInfo;     //车辆信息结构体定义
+
+typedef struct OrderInfo {
+	char OrderNumber[20];
+	char IDNumber[20];
+	char CustomerName[20];
+	char PhoneNumber[20];
+	int RentalCarNumber;
+	char PickTime[18];
+	char ExpectedReturnTime[18];
+	float Deposit;
+	char RealReturnTime[18];
+	float OriginalCost;
+	float RealCost;
+	int tail = 0;   
+	struct OrderInfo* next;
+}OrderInfo;    //租车订单信息结构体定义
+
+typedef struct CarType {
+	char TypeNumber;
+	char TypeName[20];
+	int Quantity;
+	struct CarType* next;
+}CarType;     //车辆分类信息结构体定义
+
+
+/*
+**函数名称：Initial
+**功能：显示初始界面
+**参数：无
+**返回值：无
+*/
+void Initial()
+{
+	initgraph(540, 800, INIT_RENDERMANUAL);
+	setbkcolor(WHITE); //创建背景为白色的窗口
+	
+	setcolor(BLACK);
+	setfillcolor(EGERGB(0xF5,0xF5,0xF5));
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+
+	bar3d(150, 40, 390, 70, 2, 1);
+	outtextxy(230, 45, "数据加载");   //数据加载按钮
+
+	bar3d(150, 90, 390, 120, 2, 1);
+	outtextxy(230, 95, "数据录入");   //数据录入按钮
+
+	bar3d(150, 140, 390, 170, 2, 1);
+	outtextxy(230, 145, "数据修改");   //数据修改按钮
+
+	bar3d(150, 190, 390, 220, 2, 1);
+	outtextxy(230, 195, "数据删除");   //数据删除按钮
+
+	bar3d(150, 240, 390, 270, 2, 1);
+	outtextxy(230, 245, "数据查询");   //数据查询按钮
+
+	bar3d(150, 290, 390, 320, 2, 1);
+	outtextxy(230, 295, "数据统计");    //数据统计按钮
+
+	bar3d(150, 340, 390, 370, 2, 1);
+	outtextxy(230, 345, "数据导入");    //数据导入按钮
+
+	setfillcolor(EGERGB(0x6B, 0x8E, 0x23));
+	fillellipse(50, 500, 40, 20);
+	setfont(15, 0, "Romantic");
+	outtextxy(36, 492, "Save");   //保存按钮
+
+	setfillcolor(EGERGB(0xCD, 0x00, 0x00));
+	fillellipse(430, 500, 40, 20);
+	outtextxy(416, 492, "Exit");   //退出按钮
+
+}
+
+
+/*
+**函数名称：DataMaintenance_Interface
+**功能：显示数据录入,选择以及修改界面
+**参数：无
+**返回值：信息的选择
+*/
+int DataMaintenance_Interface()
+{
+	setcolor(BLACK);
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+
+	bar3d(150, 40, 390, 70, 2, 1);
+	outtextxy(220, 45, "车辆分类信息");   //车辆分类信息按钮
+
+	bar3d(150, 90, 390, 120, 2, 1);
+	outtextxy(220, 95, "车辆基本信息");   //车辆基本信息按钮
+
+	bar3d(150, 140, 390, 170, 2, 1);
+	outtextxy(220, 145, "租车订单信息");   //租车订单信息按钮
+
+	bar3d(150, 240, 390, 270, 2, 1);
+	outtextxy(250, 245, "返回");   //返回按钮
+
+	int x, y, down;
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;    //获取鼠标位置
+		down = msg.is_down();  //鼠标是否按下
+
+		if (x >= 150 && x <= 390 && y >= 40 && y <= 70 && down)
+			return 1;
+		else if (x >= 150 && x <= 390 && y >= 90 && y <= 120 && down)
+			return 2;
+		else if (x >= 150 && x <= 390 && y >= 140 && y <= 170 && down)
+			return 3;
+		else if (x >= 150 && x <= 390 && y >= 240 && y <= 270 && down)
+			return 0;
+	}
+}
+
+/*
+**函数名称： DataSeek_Interface
+**功能：显示数据查询界面
+**参数：无
+**返回值：信息的选择
+*/
+int DataSeek_Interface()
+{
+	setcolor(BLACK);
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+
+	bar3d(150, 40, 390, 70, 2, 1);
+	outtextxy(220, 45, "车辆分类信息");   //车辆分类信息按钮
+
+	bar3d(150, 90, 390, 120, 2, 1);
+	outtextxy(220, 95, "车辆基本信息");   //车辆基本信息按钮
+
+	bar3d(150, 140, 390, 170, 2, 1);
+	outtextxy(220, 145, "租车订单信息");   //租车订单信息按钮
+
+	bar3d(150, 240, 390, 270, 2, 1);
+	outtextxy(250, 245, "返回");   //返回按钮
+
+	int x, y, down;
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;    //获取鼠标位置
+		down = msg.is_down();  //鼠标是否按下
+
+		if (x >= 150 && x <= 390 && y >= 40 && y <= 70 && down)
+			return 1;
+		else if (x >= 150 && x <= 390 && y >= 90 && y <= 120 && down)
+			return 2;
+		else if (x >= 150 && x <= 390 && y >= 140 && y <= 170 && down)
+			return 3;
+		else if (x >= 150 && x <= 390 && y >= 240 && y <= 270 && down)
+			return 0;
+	}
+}
+
+/*
+**函数名称： Statistics_Interface
+**功能：显示数据统计界面
+**参数：无
+**返回值：信息的选择
+*/
+int Statistics_Interface()
+{
+	setcolor(BLACK);
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+
+	bar3d(150, 40, 390, 70, 2, 1);
+	outtextxy(220, 45, "车辆类型统计");
+
+	bar3d(150, 90, 390, 120, 2, 1);
+	outtextxy(210, 95, "车辆类型营业额");
+
+	bar3d(150, 140, 390, 170, 2, 1);
+	outtextxy(220, 145, "车辆营业额");
+
+	bar3d(150, 190, 390, 220, 2, 1);
+	outtextxy(215, 195, "出租天数统计"); 
+
+	bar3d(150, 240, 390, 270, 2, 1);
+	outtextxy(210, 245, "车辆类型租用率");
+
+	bar3d(150, 320, 390, 350, 2, 1);
+	outtextxy(250, 325, "返回");   //返回按钮
+	int x, y, down;
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;    //获取鼠标位置
+		down = msg.is_down();   //鼠标是否按下
+
+		if (x >= 150 && x <= 390 && y >= 40 && y <= 70 && down)
+			return 1;
+		else if (x >= 150 && x <= 390 && y >= 90 && y <= 120 && down)
+			return 2;
+		else if (x >= 150 && x <= 390 && y >= 140 && y <= 170 && down)
+			return 3;
+		else if (x >= 150 && x <= 390 && y >= 190 && y <= 220 && down)
+			return 4;
+		else if (x >= 150 && x <= 390 && y >= 240 && y <= 270 && down)
+			return 5;
+		else if (x >= 150 && x <= 390 && y >= 320 && y <= 350 && down)
+			return 0;
+	}
+}
+
+/*
+**函数名称：LoadData
+**功能：加载保存在文件中的数据
+**参数：头指针head1与head2
+**返回值：操作状态，即是否成功加载数据
+*/
+status LoadData(CarInfo** head1, CarType** head2)
+{
+	FILE* fout1, * fout2;
+	if (fopen_s(&fout1, "F:\\carinfo", "rb") != 0)
+		return ERROR;
+	if (fopen_s(&fout2, "F:\\cartype", "rb") != 0)
+		return ERROR;
+	CarInfo* p1 = *head1;
+	CarType* p2 = *head2;
+	OrderInfo* p3;
+	while (feof(fout1) == 0)     //到文件尾结束
+	{
+		p1->next = (CarInfo*)malloc(sizeof(CarInfo));
+		p1 = p1->next;
+		fread(p1, sizeof(CarInfo), 1, fout1);
+		if (p1->orderflag == 1)
+		{
+			p1->order = (OrderInfo*)malloc(sizeof(OrderInfo));
+			p3 = p1->order;     //此时相当于头结点
+			fread(p3, sizeof(OrderInfo), 1, fout1);
+			while (p3->tail !=1 )
+			{
+				p3->next = (OrderInfo*)malloc(sizeof(OrderInfo));
+				p3 = p3->next;
+				fread(p3, sizeof(OrderInfo), 1, fout1);
+			}
+			p3->next = NULL;
+		}
+		else {
+			p1->order = NULL;
+		}
+	}
+	p1->next = NULL;
+	fclose(fout1);
+	while (feof(fout2) == 0)
+	{
+		p2->next = (CarType*)malloc(sizeof(CarType));
+		p2 = p2->next;
+		fread(p2, sizeof(CarType), 1, fout2);
+	}
+	p2->next = NULL;
+	fclose(fout2);
+	return OK;
+}
+
+/*
+**函数名称：SaveData
+**功能：将数据保存到文件中
+**参数：头指针head1与head2
+**返回值：是否成功保存数据
+*/
+status SaveData(CarInfo** head1, CarType** head2)
+{
+	FILE* fin1, * fin2;
+	if (fopen_s(&fin1, "F:\\carinfo", "wb+") != 0)
+		return ERROR;    //文件打开失败时
+	if (fopen_s(&fin2, "F:\\cartype", "wb+") != 0)
+		return ERROR;
+	CarInfo* p1 = *head1;
+	CarType* p2 = *head2;
+	OrderInfo* p3;
+	while (p1->next != NULL)
+	{
+		p1 = p1->next;
+		fwrite(p1, sizeof(CarInfo), 1, fin1);   //先写入车辆信息
+		if (p1->order != NULL)
+		{
+			p3 = p1->order;
+			fwrite(p3, sizeof(OrderInfo), 1, fin1);
+			while (p3->next != NULL)
+			{
+				p3 = p3->next;
+				fwrite(p3, sizeof(OrderInfo), 1, fin1);   //写入此辆车的订单信息
+			}
+		}
+	}
+	fclose(fin1);
+	while (p2->next != NULL)
+	{
+		p2 = p2->next;
+		fwrite(p2, sizeof(CarType), 1, fin2);
+	}     //将车辆分类信息存入文件
+	fclose(fin2);
+	return OK;
+}
+
+/*
+**函数名称：CarType_Input
+**功能：车辆分类信息的录入
+**参数：车辆分类信息链表头结点head2
+**返回值：无
+*/
+void CarType_Input(CarType** head2)
+{
+	cleardevice();
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+
+	setcolor(BLACK);
+	sys_edit editBox1, editBox2, editBox3;
+	editBox1.create(false);
+	editBox1.move(250, 100);
+	editBox1.size(200, 30);
+	editBox1.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox1.setcolor(BLACK);
+	editBox1.setfont(20, 0, "宋体");
+	editBox1.visable(TRUE);
+	editBox1.setfocus();   //车辆类型编码输入框
+	outtextxy(130, 105, "车辆类型编码");
+
+	editBox2.create(false);
+	editBox2.move(250, 200);
+	editBox2.size(200, 30);
+	editBox2.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox2.setcolor(BLACK);
+	editBox2.setfont(20, 0, "宋体");
+	editBox2.visable(TRUE);
+	editBox2.setfocus();    //车辆类型名称输入框
+	outtextxy(130, 205, "车辆类型名称");
+
+	editBox3.create(false);
+	editBox3.move(250, 300);
+	editBox3.size(200, 30);
+	editBox3.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox3.setcolor(BLACK);
+	editBox3.setfont(20, 0, "宋体");
+	editBox3.visable(TRUE);
+	editBox3.setfocus();   //库存数量输入框
+    outtextxy(160, 305, "库存数量");
+
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	fillellipse(430, 500, 40, 20);
+	setfont(15, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	outtextxy(416, 492, "确定");   //确定按钮
+
+	int x, y, down, Max=50;
+	char TypeNumber[5] = { '\0' }, TypeName[20] = { '\0' }, Quantity[5] = { '\0' };
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;    //获取鼠标位置
+		down = msg.is_down();   //鼠标是否按下
+
+		if (x >= 390 && x <= 470 && y >= 480 && y <= 520 && down)
+		{
+			editBox1.gettext(Max, TypeNumber);
+			editBox2.gettext(Max, TypeName);
+			editBox3.gettext(Max, Quantity);   //获取输入框内容
+
+			break;
+		}
+	}
+
+	CarType* p = *head2;
+	while (p->next != NULL)
+	{
+		p = p->next;
+	}   //找到最后一个结点
+	p->next = (CarType*)malloc(sizeof(CarType));
+	p = p->next;
+	p->TypeNumber = TypeNumber[0];
+	strcpy_s(p->TypeName, TypeName);
+	p->Quantity = atoi(Quantity);
+	p->next = NULL;    //创建新节点并赋值
+
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	outtextxy(200, 580, "录入成功!(按enter键继续)");
+	flushkey();
+	getch();
+}
+
+/*
+**函数名称：CarType_Modify
+**功能：车辆分类信息的修改
+**参数：车辆分类信息链表头结点head2，结点位置序号position
+**返回值：无
+*/
+void CarType_Modify(CarType** head2)
+{
+	cartypem_start:
+	cleardevice();
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	setcolor(BLACK);
+	sys_edit editBox1, editBox2, editBox3;
+
+	editBox1.create(false);
+	editBox1.move(250, 100);
+	editBox1.size(200, 30);
+	editBox1.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox1.setcolor(BLACK);
+	editBox1.setfont(20, 0, "宋体");
+	editBox1.visable(TRUE);
+	editBox1.setfocus();  //车辆类型编码输入框
+	outtextxy(130, 105, "车辆类型编码");
+
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	fillellipse(430, 500, 40, 20);
+	setfont(15, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	outtextxy(416, 492, "确定");   //确定按钮
+
+	int x, y, down, Max = 50;
+	char TypeNumber[5] = { '\0' }, TypeName[20] = { '\0' }, Quantity[5] = { '\0' };
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;   //获取鼠标位置
+		down = msg.is_down();   //鼠标是否按下
+
+		if (x >= 390 && x <= 470 && y >= 480 && y <= 520 && down)
+		{
+			editBox1.gettext(Max, TypeNumber);   //获取输入框内容
+			break;
+		}
+	}
+
+	CarType* p = *head2;
+	int flag = 0;
+	while (p->next != NULL)
+	{
+		p = p->next;
+		if (p->TypeNumber == TypeNumber[0])
+		{
+			flag = 1;
+			break;
+		}
+	}   //找到指定结点
+	if (flag == 0)
+	{
+		flushkey();
+		outtextxy(120, 350, "车辆类型编码输入错误(按enter键重新输入)");
+		getch();
+		goto cartypem_start;
+	}
+
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+
+	editBox2.create(false);
+	editBox2.move(250, 200);
+	editBox2.size(200, 30);
+	editBox2.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox2.setcolor(BLACK);
+	editBox2.setfont(20, 0, "宋体");
+	editBox2.visable(TRUE);
+	editBox2.setfocus();   //车辆类型名称输入框
+	outtextxy(130, 205, "车辆类型名称");
+
+	editBox3.create(false);
+	editBox3.move(250, 300);
+	editBox3.size(200, 30);
+	editBox3.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox3.setcolor(BLACK);
+	editBox3.setfont(20, 0, "宋体");
+	editBox3.visable(TRUE);
+	editBox3.setfocus();   //库存数量输入框
+	outtextxy(160, 305, "库存数量");
+
+	outtextxy(200, 350, "输入修改后的数据");
+
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;   //获取鼠标位置
+		down = msg.is_down();   //鼠标是否按下
+
+		if (x >= 390 && x <= 470 && y >= 480 && y <= 520 && down)
+		{
+			editBox1.gettext(Max, TypeNumber);  //获取输入框内容
+			editBox2.gettext(Max, TypeName);
+			editBox3.gettext(Max, Quantity);
+			break;
+		}
+	}
+
+	if (strlen(TypeNumber) != 0)
+		p->TypeNumber = TypeNumber[0];
+	if (strlen(TypeName) != 0)
+		strcpy_s(p->TypeName, TypeName);
+	if (strlen(Quantity) != 0)
+		p->Quantity = atoi(Quantity);
+
+	outtextxy(200, 450, "修改成功!(按enter键继续)");
+	flushkey();
+	getch();
+}
+
+/*
+**函数名称：CarType_Delete
+**功能：车辆分类信息的删除
+**参数：车辆分类信息链表头结点head2，结点位置序号position
+**返回值：无
+*/
+void CarType_Delete(CarType** head2)
+{
+	cartyped_start:
+	cleardevice();
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	setcolor(BLACK);
+	sys_edit editBox1;
+
+	editBox1.create(false);
+	editBox1.move(250, 100);
+	editBox1.size(200, 30);
+	editBox1.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox1.setcolor(BLACK);
+	editBox1.setfont(20, 0, "宋体");
+	editBox1.visable(TRUE);
+	editBox1.setfocus();   //输入框
+	outtextxy(130, 105, "车辆类型编码");
+
+	outtextxy(200, 200, "输入要删除的车辆类型编码");
+
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	fillellipse(430, 500, 40, 20);
+	setfont(15, 0, "宋体");
+	setbkmode(TRANSPARENT);
+	outtextxy(416, 492, "确定");   //确定按钮
+
+	int x, y, down, Max = 50;
+	char TypeNumber[5] = { '\0' };
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;     //获取鼠标位置
+		down = msg.is_down();   //鼠标是否按下
+
+		if (x >= 390 && x <= 470 && y >= 480 && y <= 520 && down)
+		{
+			editBox1.gettext(Max, TypeNumber);  //获取输入框内容
+			break;
+		}
+	}
+	flushkey();
+
+	CarType* pre, * p;
+	pre = *head2;   //当前结点的前驱
+	p = pre->next;
+	int flag = 0;
+
+	while (pre->next != NULL)
+	{
+		if (p->TypeNumber == TypeNumber[0])
+		{
+			flag = 1;
+			break;
+		}
+		p = p->next;
+		pre = pre->next;
+	}
+	setfont(20, 0, "华文行楷");
+	if (flag == 0)
+	{
+		outtextxy(120, 300, "输入错误(按enter重新输入)");
+		getch();
+		goto cartyped_start;
+	}   //判断输入是否正确
+
+	
+
+	pre->next = p->next;
+	free(p);
+	outtextxy(120, 300,"删除成功(按enter继续)");
+	getch();
+}
+
+/*
+**函数名称：CarInfo_Input
+**功能：车辆基本信息的录入
+**参数：车辆基本信息链表头结点head1
+**返回值：无
+*/
+void CarInfo_Input(CarInfo** head1, CarType** head2)
+{
+carinfoi_start:
+	cleardevice();
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+
+	setcolor(BLACK);
+	sys_edit editBox1, editBox2, editBox3 ,editBox4 ,editBox5 ,editBox6 ,editBox7;
+
+	editBox1.create(false);
+	editBox1.move(250, 50);
+	editBox1.size(200, 30);
+	editBox1.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox1.setcolor(BLACK);
+	editBox1.setfont(20, 0, "宋体");
+	editBox1.visable(TRUE);
+	editBox1.setfocus();   //车辆编号输入框
+	outtextxy(160, 55, "车辆编号");
+
+	editBox2.create(false);
+	editBox2.move(250, 100);
+	editBox2.size(200, 30);
+	editBox2.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox2.setcolor(BLACK);
+	editBox2.setfont(20, 0, "宋体");
+	editBox2.visable(TRUE);
+	editBox2.setfocus();   //车牌号输入框
+	outtextxy(170, 105, "车牌号");
+
+	editBox3.create(false);
+	editBox3.move(250, 150);
+	editBox3.size(200, 30);
+	editBox3.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox3.setcolor(BLACK);
+	editBox3.setfont(20, 0, "宋体");
+	editBox3.visable(TRUE);
+	editBox3.setfocus();   //车辆类型编码输入框
+	outtextxy(120, 155, "车辆类型编码");
+
+	editBox4.create(false);
+	editBox4.move(250, 200);
+	editBox4.size(200, 30);
+	editBox4.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox4.setcolor(BLACK);
+	editBox4.setfont(20, 0, "宋体");
+	editBox4.visable(TRUE);
+	editBox4.setfocus();   //车辆名称输入框
+	outtextxy(160, 205, "车辆名称");
+
+	editBox5.create(false);
+	editBox5.move(250, 250);
+	editBox5.size(200, 30);
+	editBox5.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox5.setcolor(BLACK);
+	editBox5.setfont(20, 0, "宋体");
+	editBox5.visable(TRUE);
+	editBox5.setfocus();   //排挡方式输入框
+	outtextxy(160, 255, "排挡方式");
+
+	editBox6.create(false);
+	editBox6.move(250, 300);
+	editBox6.size(200, 30);
+	editBox6.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox6.setcolor(BLACK);
+	editBox6.setfont(20, 0, "宋体");
+	editBox6.visable(TRUE);
+	editBox6.setfocus();   //每日租金输入框
+	outtextxy(160, 305, "每日租金");
+
+	editBox7.create(false);
+	editBox7.move(250, 350);
+	editBox7.size(200, 30);
+	editBox7.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox7.setcolor(BLACK);
+	editBox7.setfont(20, 0, "宋体");
+	editBox7.visable(TRUE);
+	editBox7.setfocus();  //出租状态输入框
+	outtextxy(160, 355, "出租状态");
+
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	fillellipse(430, 500, 40, 20);
+	setfont(15, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	outtextxy(416, 492, "确定");   //确定按钮
+
+	int x, y, down, Max = 50;
+	char CarID[5] = { '\0' }, CarNumber[10] = { '\0' }, TypeNumber[5] = { '\0' }, CarName[20] = { '\0' }, Gear[15] = { '\0' }, DailyRent[10] = { '\0' }, RentalStatus[5] = { '\0' };
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;    //获取鼠标位置
+		down = msg.is_down();   //鼠标是否按下
+
+		if (x >= 390 && x <= 470 && y >= 480 && y <= 520 && down)
+		{
+			editBox1.gettext(Max, CarID);
+			editBox2.gettext(Max, CarNumber);
+			editBox3.gettext(Max, TypeNumber);
+			editBox4.gettext(Max, CarName);
+			editBox5.gettext(Max, Gear);
+			editBox6.gettext(Max, DailyRent);
+			editBox7.gettext(Max, RentalStatus); 
+
+			break;
+		}
+	}
+
+	CarInfo* p = *head1;
+	CarType* p0 = *head2;
+	int flag = 0;
+	while (p0->next != NULL)
+	{
+		p0 = p0->next;
+		if (p0->TypeNumber == TypeNumber[0])
+		{
+			flag = 1;
+			break;
+		}
+	}
+
+	if (flag == 0)
+	{
+		setfont(20, 0, "华文行楷");
+		setbkmode(TRANSPARENT);
+		outtextxy(200, 580, "输入错误!(按enter键重新输入)");
+		flushkey();
+		getch();
+		goto carinfoi_start;
+	}
+	while (p->next != NULL)
+	{
+		p = p->next;
+	}
+	p->next = (CarInfo*)malloc(sizeof(CarInfo));
+	p = p->next;
+	p->CarID = atoi(CarID);
+	strcpy_s(p->CarNumber, CarNumber);
+	p->TypeNumber = TypeNumber[0];
+	strcpy_s(p->CarName, CarName);
+	strcpy_s(p->Gear, Gear);
+	p->DailyRent = (float)atoi(DailyRent);
+	p->RentalStatus = RentalStatus[0];
+	p->next = NULL;
+	p->order = NULL;   //创建新结点并赋值
+
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	outtextxy(200, 580, "录入成功!(按enter键继续)");
+	flushkey();
+	getch();
+}
+
+/*
+**函数名称：CarInfo_Modify
+**功能：车辆基本信息的修改
+**参数：车辆基本信息链表头结点head1,结点位置position
+**返回值：无
+*/
+void CarInfo_Modify(CarInfo** head1)
+{
+	carinfom_start:
+	cleardevice();
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+
+	setcolor(BLACK);
+	sys_edit editBox1, editBox2, editBox3, editBox4, editBox5, editBox6, editBox7;
+
+	editBox1.create(false);
+	editBox1.move(250, 50);
+	editBox1.size(200, 30);
+	editBox1.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox1.setcolor(BLACK);
+	editBox1.setfont(20, 0, "宋体");
+	editBox1.visable(TRUE);
+	editBox1.setfocus();   //车辆编号输入框
+	outtextxy(120, 55, "车辆编号(必填)");
+
+	editBox2.create(false);
+	editBox2.move(250, 100);
+	editBox2.size(200, 30);
+	editBox2.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox2.setcolor(BLACK);
+	editBox2.setfont(20, 0, "宋体");
+	editBox2.visable(TRUE);
+	editBox2.setfocus();   //车牌号输入框
+	outtextxy(170, 105, "车牌号");
+
+	editBox3.create(false);
+	editBox3.move(250, 150);
+	editBox3.size(200, 30);
+	editBox3.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox3.setcolor(BLACK);
+	editBox3.setfont(20, 0, "宋体");
+	editBox3.visable(TRUE);
+	editBox3.setfocus();   //车辆类型编码输入框
+	outtextxy(120, 155, "车辆类型编码");
+
+	editBox4.create(false);
+	editBox4.move(250, 200);
+	editBox4.size(200, 30);
+	editBox4.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox4.setcolor(BLACK);
+	editBox4.setfont(20, 0, "宋体");
+	editBox4.visable(TRUE);
+	editBox4.setfocus();   //车辆名称输入框
+	outtextxy(160, 205, "车辆名称");
+
+	editBox5.create(false);
+	editBox5.move(250, 250);
+	editBox5.size(200, 30);
+	editBox5.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox5.setcolor(BLACK);
+	editBox5.setfont(20, 0, "宋体");
+	editBox5.visable(TRUE);
+	editBox5.setfocus();   //排挡方式输入框
+	outtextxy(160, 255, "排挡方式");
+
+	editBox6.create(false);
+	editBox6.move(250, 300);
+	editBox6.size(200, 30);
+	editBox6.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox6.setcolor(BLACK);
+	editBox6.setfont(20, 0, "宋体");
+	editBox6.visable(TRUE);
+	editBox6.setfocus();   //每日租金输入框
+	outtextxy(160, 305, "每日租金");
+
+	editBox7.create(false);
+	editBox7.move(250, 350);
+	editBox7.size(200, 30);
+	editBox7.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox7.setcolor(BLACK);
+	editBox7.setfont(20, 0, "宋体");
+	editBox7.visable(TRUE);
+	editBox7.setfocus();  //出租状态输入框
+	outtextxy(160, 355, "出租状态");
+
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	fillellipse(430, 500, 40, 20);
+	setfont(15, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	outtextxy(416, 492, "确定");   //确定按钮
+
+	int x, y, down, Max = 50;
+	char CarID[5] = { '\0' }, CarNumber[10] = { '\0' }, TypeNumber[5] = { '\0' }, CarName[20] = { '\0' }, Gear[15] = { '\0' }, DailyRent[10] = { '\0' }, RentalStatus[5] = { '\0' };
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;    //获取鼠标位置
+		down = msg.is_down();   //鼠标是否按下
+
+		if (x >= 390 && x <= 470 && y >= 480 && y <= 520 && down)
+		{
+			editBox1.gettext(Max, CarID);
+			editBox2.gettext(Max, CarNumber);
+			editBox3.gettext(Max, TypeNumber);
+			editBox4.gettext(Max, CarName);
+			editBox5.gettext(Max, Gear);
+			editBox6.gettext(Max, DailyRent);
+			editBox7.gettext(Max, RentalStatus); 
+
+			break;
+		}
+	}
+
+	CarInfo* p = *head1;
+	int flag = 0;
+	while (p->next != NULL)
+	{
+		p = p->next;
+		if (p->CarID == atoi(CarID))
+		{
+			flag = 1;
+			break;
+		}
+	}
+	if (flag == 0)
+	{
+		outtextxy(120, 400, "车辆编号输入错误!(按enter键重新输入)");
+		getch();
+		goto carinfom_start;
+	}
+
+	if (strlen(CarID) != 0)
+		p->CarID = atoi(CarID);
+	if (strlen(CarNumber) != 0)
+		strcpy_s(p->CarNumber, CarNumber);
+	if (strlen(TypeNumber) != 0)
+		p->TypeNumber = TypeNumber[0];
+	if (strlen(CarName) != 0)
+		strcpy_s(p->CarName, CarName);
+	if (strlen(Gear) != 0)
+		strcpy_s(p->Gear, Gear);
+	if (strlen(DailyRent) != 0)
+		p->DailyRent = (float)atoi(DailyRent);
+	if (strlen(RentalStatus) != 0)
+		p->RentalStatus = RentalStatus[0];   //给结点赋值
+
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	outtextxy(200, 580, "修改成功!(按enter键继续)");
+	flushkey();
+	getch();
+}
+
+/*
+**函数名称：CarInfo_Delete
+**功能：车辆基本信息的删除
+**参数：车辆基本信息链表头结点head1，结点位置序号position
+**返回值：无
+*/
+void CarInfo_Delete(CarInfo** head1)
+{
+carinfod_start:
+	cleardevice();
+	setfont(20, 0, "�����п�");
+	setbkmode(TRANSPARENT);
+
+	setcolor(BLACK);
+	sys_edit editBox1;
+
+	editBox1.create(false);
+	editBox1.move(250, 50);
+	editBox1.size(200, 30);
+	editBox1.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox1.setcolor(BLACK);
+	editBox1.setfont(20, 0, "宋体");
+	editBox1.visable(TRUE);
+	editBox1.setfocus();   //车辆编号
+	outtextxy(150, 55, "车辆编号");
+
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	fillellipse(430, 500, 40, 20);
+	setfont(15, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	outtextxy(416, 492, "确定");   //确定按钮
+
+	outtextxy(200, 100, "输入要删除的车辆编号");
+
+	int x, y, down, Max = 50;
+	char CarID[5] = { '\0' };
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y; 
+		down = msg.is_down();
+
+		if (x >= 390 && x <= 470 && y >= 480 && y <= 520 && down)
+		{
+			editBox1.gettext(Max, CarID);
+			break;
+		}
+	}
+	flushkey();
+
+	CarInfo *pre, *p;
+	pre = *head1;
+	p = pre->next;
+	int flag = 0;
+	setfont(20, 0, "华文行楷");
+	while (pre->next != NULL)
+	{
+		if (p->CarID == atoi(CarID))
+		{
+			flag = 1;
+			break;
+		}
+		p = p->next;
+		pre = pre->next;
+	}
+	if (flag == 0)
+	{
+		outtextxy(200, 200, "输入错误(按enter重新输入)");
+		getch();
+		goto carinfod_start;
+	}
+	pre->next = p->next;
+	free(p);   //删除节点
+
+	int i = 0;
+	p = *head1;
+	OrderInfo* p0;
+	while (p->next != NULL)
+	{
+		p = p->next;
+		i++;
+		p->CarID = i;
+		p0 = p->order;
+		p0->RentalCarNumber = i;
+		while (p0->next != NULL)
+		{
+			p0 = p0->next;
+			p0->RentalCarNumber = i;
+		}
+	}   //对于删除结点后车辆编码紊乱的情况重新编码
+
+	outtextxy(200, 200, "删除成功(按enter继续)");
+	getch();
+}
+
+/*
+**函数名称：OrderInfo_Input
+**功能：租车订单信息的录入
+**参数：车辆基本信息链表头结点head1
+**返回值：无
+*/
+void OrderInfo_Input(CarInfo** head1)
+{
+	orderinfoi_start:
+	cleardevice();
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+
+	setcolor(BLACK);
+	sys_edit editBox1, editBox2, editBox3, editBox4, editBox5, editBox6, editBox7 ,editBox8 ,editBox9 ,editBox10 ,editBox11;
+
+	editBox1.create(false);
+	editBox1.move(250, 50);
+	editBox1.size(200, 30);
+	editBox1.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox1.setcolor(BLACK);
+	editBox1.setfont(20, 0, "宋体");
+	editBox1.visable(TRUE);
+	editBox1.setfocus();   //订单编号输入框
+	outtextxy(160, 55, "订单编号");
+
+	editBox2.create(false);
+	editBox2.move(250, 100);
+	editBox2.size(200, 30);
+	editBox2.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox2.setcolor(BLACK);
+	editBox2.setfont(20, 0, "宋体");
+	editBox2.visable(TRUE);
+	editBox2.setfocus();   //身份证号输入框
+	outtextxy(160, 105, "身份证号");
+
+	editBox3.create(false);
+	editBox3.move(250, 150);
+	editBox3.size(200, 30);
+	editBox3.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox3.setcolor(BLACK);
+	editBox3.setfont(20, 0, "宋体");
+	editBox3.visable(TRUE);
+	editBox3.setfocus();   //客人姓名输入框
+	outtextxy(160, 155, "客人姓名");
+
+	editBox4.create(false);
+	editBox4.move(250, 200);
+	editBox4.size(200, 30);
+	editBox4.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox4.setcolor(BLACK);
+	editBox4.setfont(20, 0, "宋体");
+	editBox4.visable(TRUE);
+	editBox4.setfocus();  //手机号码输入框
+	outtextxy(160, 205, "手机号码");
+
+	editBox5.create(false);
+	editBox5.move(250, 250);
+	editBox5.size(200, 30);
+	editBox5.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox5.setcolor(BLACK);
+	editBox5.setfont(20, 0, "宋体");
+	editBox5.visable(TRUE);
+	editBox5.setfocus();  //租用车辆编号输入框
+	outtextxy(120, 255, "租用车辆编号");
+
+	editBox6.create(false);
+	editBox6.move(250, 300);
+	editBox6.size(200, 30);
+	editBox6.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox6.setcolor(BLACK);
+	editBox6.setfont(20, 0, "宋体");
+	editBox6.visable(TRUE);
+	editBox6.setfocus();   //取车时间输入框
+	outtextxy(160, 305, "取车时间");
+
+	editBox7.create(false);
+	editBox7.move(250, 350);
+	editBox7.size(200, 30);
+	editBox7.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox7.setcolor(BLACK);
+	editBox7.setfont(20, 0, "宋体");
+	editBox7.visable(TRUE);
+	editBox7.setfocus();   //预约还车时间输入框
+	outtextxy(120, 355, "预约还车时间");
+
+	editBox8.create(false);
+	editBox8.move(250, 400);
+	editBox8.size(200, 30);
+	editBox8.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox8.setcolor(BLACK);
+	editBox8.setfont(20, 0, "宋体");
+	editBox8.visable(TRUE);
+	editBox8.setfocus();   //押金输入框
+	outtextxy(180, 405, "押金");
+
+	editBox9.create(false);
+	editBox9.move(250, 450);
+	editBox9.size(200, 30);
+	editBox9.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox9.setcolor(BLACK);
+	editBox9.setfont(20, 0, "宋体");
+	editBox9.visable(TRUE);
+	editBox9.setfocus();   //实际还车时间输入框
+	outtextxy(120, 455, "实际还车时间");
+
+	editBox10.create(false);
+	editBox10.move(250, 500);
+	editBox10.size(200, 30);
+	editBox10.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox10.setcolor(BLACK);
+	editBox10.setfont(20, 0, "宋体");
+	editBox10.visable(TRUE);
+	editBox10.setfocus();   //应缴费用输入框
+	outtextxy(120, 505, "应缴费用");
+
+	editBox11.create(false);
+	editBox11.move(250, 550);
+	editBox11.size(200, 30);
+	editBox11.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox11.setcolor(BLACK);
+	editBox11.setfont(20, 0, "宋体");
+	editBox11.visable(TRUE);
+	editBox11.setfocus();  //实缴费用输入框
+	outtextxy(120, 555, "实缴费用");
+
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	fillellipse(430, 600, 40, 20);
+	setfont(15, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	outtextxy(416, 592, "确定"); //确定按钮
+
+	int x, y, down, Max = 50;
+	char OrderNumber[20] = { '\0' }, IDNumber[20] = { '\0' }, CustomerName[20] = { '\0' }, PhoneNumber[20] = { '\0' }, RentalCarNumber[4] = { '\0' }, PickTime[18] = { '\0' }, ExpectedReturnTime[18] = { '\0' }, Deposit[10] = { '\0' }, RealReturnTime[18] = { '\0' }, OriginalCost[10] = { '\0' }, RealCost[10] = { '\0' };
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;
+		down = msg.is_down(); 
+
+		if (x >= 390 && x <= 470 && y >= 580 && y <= 620 && down)
+		{
+			editBox1.gettext(Max, OrderNumber);
+			editBox2.gettext(Max, IDNumber);
+			editBox3.gettext(Max, CustomerName);
+			editBox4.gettext(Max, PhoneNumber);
+			editBox5.gettext(Max, RentalCarNumber);
+			editBox6.gettext(Max, PickTime);
+			editBox7.gettext(Max, ExpectedReturnTime);
+			editBox8.gettext(Max, Deposit);
+			editBox9.gettext(Max, RealReturnTime);
+			editBox10.gettext(Max, OriginalCost);
+			editBox11.gettext(Max, RealCost); 
+
+			break;
+		}
+	}
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	flushkey();
+
+	CarInfo* p1 = *head1;
+	OrderInfo* p2;
+	int flag = 0;
+	while (p1->next != NULL)
+	{
+		p1 = p1->next;
+		if (p1->CarID == atoi(RentalCarNumber))
+		{
+			flag = 1;
+			break;
+		}
+	}   //找到指定车辆
+	if (flag == 0)
+	{
+		outtextxy(100, 580, "车辆编号输入错误(按enter重新输入)");
+		getch();
+		goto orderinfoi_start;
+	} 
+
+	p2 = p1->order;
+	if (p2 != NULL)
+	{
+		p2 = p1->order;
+		while (p2->next != NULL)
+		{
+			p2 = p2->next;
+		}
+		p2->next = (OrderInfo*)malloc(sizeof(OrderInfo));
+		p2->tail = 0;
+		p2 = p2->next;
+		strcpy_s(p2->OrderNumber, OrderNumber);
+		strcpy_s(p2->IDNumber, IDNumber);
+		strcpy_s(p2->CustomerName, CustomerName);
+		strcpy_s(p2->PhoneNumber, PhoneNumber);
+		p2->RentalCarNumber = atoi(RentalCarNumber);
+		strcpy_s(p2->PickTime, PickTime);
+		strcpy_s(p2->ExpectedReturnTime, ExpectedReturnTime);
+		p2->Deposit = (float)atoi(Deposit);
+		strcpy_s(p2->RealReturnTime, RealReturnTime);
+		p2->OriginalCost = (float)atoi(OriginalCost);
+		p2->RealCost = (float)atoi(RealCost);
+		p2->tail = 1;
+		p2->next = NULL;   //创建新节点并赋值
+	}
+
+	else {
+		p2 = (OrderInfo*)malloc(sizeof(OrderInfo));
+		strcpy_s(p2->OrderNumber, OrderNumber);
+		strcpy_s(p2->IDNumber, IDNumber);
+		strcpy_s(p2->CustomerName, CustomerName);
+		strcpy_s(p2->PhoneNumber, PhoneNumber);
+		p2->RentalCarNumber = atoi(RentalCarNumber);
+		strcpy_s(p2->PickTime, PickTime);
+		strcpy_s(p2->ExpectedReturnTime, ExpectedReturnTime);
+		p2->Deposit = (float)atoi(Deposit);
+		strcpy_s(p2->RealReturnTime, RealReturnTime);
+		p2->OriginalCost = (float)atoi(OriginalCost);
+		p2->RealCost = (float)atoi(RealCost);
+		p2->next = NULL;   //创建新节点并赋值
+		p1->order = p2;
+		p1->orderflag = 1;
+		p2->tail = 1;
+	}   //由于没有头结点所以分两种情况
+
+	outtextxy(200, 580, "录入成功!(按enter继续)");
+	flushkey();
+	getch();
+}
+
+/*
+**函数名称：OrderInfo_Modify
+**功能：租车订单信息的修改
+**参数：车辆基本信息链表头结点head1
+**返回值：无
+*/
+void OrderInfo_Modify(CarInfo** head1)
+{
+	orderinfom_start:
+	cleardevice();
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+
+	setcolor(BLACK);
+	sys_edit editBox1, editBox2, editBox3, editBox4, editBox5, editBox6, editBox7, editBox8, editBox9, editBox10, editBox11;
+
+	editBox1.create(false);
+	editBox1.move(250, 50);
+	editBox1.size(200, 30);
+	editBox1.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox1.setcolor(BLACK);
+	editBox1.setfont(20, 0, "宋体");
+	editBox1.visable(TRUE);
+	editBox1.setfocus();   //订单编号输入框
+	outtextxy(160, 55, "订单编号");
+
+	editBox5.create(false);
+	editBox5.move(250, 250);
+	editBox5.size(200, 30);
+	editBox5.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox5.setcolor(BLACK);
+	editBox5.setfont(20, 0, "宋体");
+	editBox5.visable(TRUE);
+	editBox5.setfocus();   //租用车辆编号输入框
+	outtextxy(120, 255, "租用车辆编号");
+
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	fillellipse(430, 600, 40, 20);
+	setfont(15, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	outtextxy(416, 592, "确定");   //确定按钮
+
+	int x, y, down, Max = 50;
+	char OrderNumber[20] = { '\0' }, RentalCarNumber[4] = { '\0' };
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;    //获取鼠标位置
+		down = msg.is_down();  //鼠标是否按下
+
+		if (x >= 390 && x <= 470 && y >= 580 && y <= 620 && down)
+		{
+			editBox1.gettext(Max, OrderNumber);
+			editBox5.gettext(Max, RentalCarNumber);
+			break;
+		}
+	} 
+	flushkey();
+
+	CarInfo* p1 = *head1;
+	OrderInfo* p2;
+	int flag = 0;
+
+	while (p1->next != NULL)
+	{
+		p1 = p1->next;
+		if (p1->CarID == atoi(RentalCarNumber))
+		{
+			flag = 1;
+			break;
+		}
+	}
+	if (flag == 0 || p1->order==NULL)
+	{
+		outtextxy(120, 560, "汽车编号输入错误!(按enter键重新输入)");
+		getch();
+		goto orderinfom_start;
+	}    //判断汽车编号是否有误
+	flag = 0;
+	p2 = p1->order;
+	if (p2->next != NULL)
+	{
+		while (p2 != NULL)
+		{
+			if (strcmp(p2->OrderNumber, OrderNumber) == 0)
+			{
+				flag = 1;
+				break;
+			}
+			p2 = p2->next;
+		}
+	}
+	else {
+		if (strcmp(p2->OrderNumber, OrderNumber) == 0)
+			flag = 1;
+	}
+	if (flag == 0)
+	{
+		outtextxy(120, 560, "订单编号输入错误!(按enter键重新输入)");
+		getch();
+		goto orderinfom_start;
+	}    //判断订单编号是否有误
+
+
+
+	setfont(20, 0, "华文行楷");
+
+	editBox2.create(false);
+	editBox2.move(250, 100);
+	editBox2.size(200, 30);
+	editBox2.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox2.setcolor(BLACK);
+	editBox2.setfont(20, 0, "宋体");
+	editBox2.visable(TRUE);
+	editBox2.setfocus();   //身份证号输入框
+	outtextxy(160, 105, "身份证号");
+
+	editBox3.create(false);
+	editBox3.move(250, 150);
+	editBox3.size(200, 30);
+	editBox3.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox3.setcolor(BLACK);
+	editBox3.setfont(20, 0, "宋体");
+	editBox3.visable(TRUE);
+	editBox3.setfocus();   //客人姓名输入框
+	outtextxy(160, 155, "客人姓名");
+
+	editBox4.create(false);
+	editBox4.move(250, 200);
+	editBox4.size(200, 30);
+	editBox4.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox4.setcolor(BLACK);
+	editBox4.setfont(20, 0, "宋体");
+	editBox4.visable(TRUE);
+	editBox4.setfocus();   //手机号码输入框
+	outtextxy(160, 205, "手机号码");
+
+	editBox6.create(false);
+	editBox6.move(250, 300);
+	editBox6.size(200, 30);
+	editBox6.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox6.setcolor(BLACK);
+	editBox6.setfont(20, 0, "宋体");
+	editBox6.visable(TRUE);
+	editBox6.setfocus();   //取车时间输入框
+	outtextxy(160, 305, "取车时间");
+
+	editBox7.create(false);
+	editBox7.move(250, 350);
+	editBox7.size(200, 30);
+	editBox7.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox7.setcolor(BLACK);
+	editBox7.setfont(20, 0, "宋体");
+	editBox7.visable(TRUE);
+	editBox7.setfocus();   //预约还车时间输入框
+	outtextxy(120, 355, "预约还车时间");
+
+	editBox8.create(false);
+	editBox8.move(250, 400);
+	editBox8.size(200, 30);
+	editBox8.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox8.setcolor(BLACK);
+	editBox8.setfont(20, 0, "宋体");
+	editBox8.visable(TRUE);
+	editBox8.setfocus();   //押金输入框
+	outtextxy(180, 405, "押金");
+
+	editBox9.create(false);
+	editBox9.move(250, 450);
+	editBox9.size(200, 30);
+	editBox9.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox9.setcolor(BLACK);
+	editBox9.setfont(20, 0, "宋体");
+	editBox9.visable(TRUE);
+	editBox9.setfocus();   //实际还车时间输入框
+	outtextxy(120, 455, "实际还车时间");
+
+	editBox10.create(false);
+	editBox10.move(250, 500);
+	editBox10.size(200, 30);
+	editBox10.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox10.setcolor(BLACK);
+	editBox10.setfont(20, 0, "宋体");
+	editBox10.visable(TRUE);
+	editBox10.setfocus();   //应缴费用输入框
+	outtextxy(120, 505, "应缴费用");
+
+	editBox11.create(false);
+	editBox11.move(250, 550);
+	editBox11.size(200, 30);
+	editBox11.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox11.setcolor(BLACK);
+	editBox11.setfont(20, 0, "宋体");
+	editBox11.visable(TRUE);
+	editBox11.setfocus();   //实缴费用输入框
+	outtextxy(120, 555, "实缴费用");
+
+	char IDNumber[20] = { '\0' }, CustomerName[20] = { '\0' }, PhoneNumber[20] = { '\0' }, PickTime[18] = { '\0' }, ExpectedReturnTime[18] = { '\0' }, Deposit[10] = { '\0' }, RealReturnTime[18] = { '\0' }, OriginalCost[10] = { '\0' }, RealCost[10] = { '\0' };
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;     //获取鼠标位置
+		down = msg.is_down();  //鼠标是否按下
+
+		if (x >= 390 && x <= 470 && y >= 580 && y <= 620 && down)
+		{
+			editBox1.gettext(Max, OrderNumber);
+			editBox2.gettext(Max, IDNumber);
+			editBox3.gettext(Max, CustomerName);
+			editBox4.gettext(Max, PhoneNumber);
+			editBox5.gettext(Max, RentalCarNumber);
+			editBox6.gettext(Max, PickTime);
+			editBox7.gettext(Max, ExpectedReturnTime);
+			editBox8.gettext(Max, Deposit);
+			editBox9.gettext(Max, RealReturnTime);
+			editBox10.gettext(Max, OriginalCost);
+			editBox11.gettext(Max, RealCost); 
+
+			break;
+		}
+	}
+	if (strlen(OrderNumber) != 0)
+		strcpy_s(p2->OrderNumber, OrderNumber);
+	if (strlen(IDNumber) != 0)
+		strcpy_s(p2->IDNumber, IDNumber);
+	if (strlen(CustomerName) != 0)
+		strcpy_s(p2->CustomerName, CustomerName);
+	if (strlen(PhoneNumber) != 0)
+		strcpy_s(p2->PhoneNumber, PhoneNumber);
+	if (strlen(RentalCarNumber) != 0)
+		p2->RentalCarNumber = atoi(RentalCarNumber);
+	if (strlen(PickTime) != 0)
+		strcpy_s(p2->PickTime, PickTime);
+	if (strlen(ExpectedReturnTime) != 0)
+		strcpy_s(p2->ExpectedReturnTime, ExpectedReturnTime);
+	if (strlen(Deposit) != 0)
+		p2->Deposit = (float)atoi(Deposit);
+	if (strlen(RealReturnTime) != 0)
+		strcpy_s(p2->RealReturnTime, RealReturnTime);
+	if (strlen(OriginalCost) != 0)
+		p2->OriginalCost = (float)atoi(OriginalCost);
+	if (strlen(RealCost) != 0)
+		p2->RealCost = (float)atoi(RealCost);
+	
+	outtextxy(200, 585, "修改成功!(按enter键继续)");
+	flushkey();
+	getch();
+}
+
+
+/*
+**函数名称：OrderInfo_Delete
+**功能：租车订单信息的删除
+**参数：车辆基本信息链表头结点head1
+**返回值：无
+*/
+void OrderInfo_Delete(CarInfo** head1)
+{
+orderinfod_start:
+	cleardevice();
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+
+	setcolor(BLACK);
+	sys_edit editBox1, editBox2;
+
+	editBox1.create(false);
+	editBox1.move(250, 50);
+	editBox1.size(200, 30);
+	editBox1.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox1.setcolor(BLACK);
+	editBox1.setfont(20, 0, "宋体");
+	editBox1.visable(TRUE);
+	editBox1.setfocus();   //订单编号输入框
+	outtextxy(160, 55, "订单编号");
+
+	editBox2.create(false);
+	editBox2.move(250, 250);
+	editBox2.size(200, 30);
+	editBox2.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox2.setcolor(BLACK);
+	editBox2.setfont(20, 0, "宋体");
+	editBox2.visable(TRUE);
+	editBox2.setfocus();   //租用车辆编号输入框
+	outtextxy(120, 105, "租用车辆编号");
+
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	fillellipse(430, 600, 40, 20);
+	setfont(15, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	outtextxy(416, 592, "确定");   //确定按钮
+
+	int x, y, down, Max = 50;
+	char OrderNumber[20] = { '\0' }, RentalCarNumber[5] = { '\0' };
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;    
+		down = msg.is_down();  
+
+		if (x >= 390 && x <= 470 && y >= 580 && y <= 620 && down)
+		{
+			editBox1.gettext(Max, OrderNumber);
+			editBox2.gettext(Max, RentalCarNumber);
+			break;
+		}
+	}   
+	flushkey();
+
+	CarInfo* p1 = *head1;
+	OrderInfo* pre, * p2;
+	int flag = 0;
+	while (p1->next != NULL)
+	{
+		p1 = p1->next;
+		if (p1->CarID == atoi(RentalCarNumber))
+		{
+			flag = 1;
+			break;
+		}
+	}
+	pre = p1->order;
+	if (flag == 0 || pre == NULL)
+	{
+		outtextxy(120, 200, "汽车编号输入错误!(按enter键重新输入");
+		getch();
+		goto orderinfod_start;
+	}    
+	flag = 0;
+	p2 = pre->next;
+	if (strcmp(pre->OrderNumber, OrderNumber) == 0)
+	{
+		p1->order = p2;
+		free(pre);
+		if (p2 == NULL)
+			p1->orderflag = 0;
+	}
+	else {
+		while (pre->next != NULL)
+		{
+			if (strcmp(p2->OrderNumber, OrderNumber) == 0)
+			{
+				flag = 1;
+				break;
+			}
+			p2 = p2->next;
+			pre = pre->next;
+		}
+		if (flag == 0)
+		{
+			outtextxy(120, 200, "订单编号输入错误!(按enter键重新输入");
+			getch();
+			goto orderinfod_start;
+		}
+		pre->next = p2->next;
+		free(p2);
+		if (pre->next == NULL)
+			pre->tail = 1;
+	}
+
+	outtextxy(200, 300, "删除成功(按enter继续)");
+	getch();
+}
+
+/*
+**函数名称：CarType_Seek
+**功能：车辆类型的查找
+**参数：车辆基本信息链表头结点head1，车辆类型信息链表头结点head2
+**返回值：无
+*/
+void CarType_Seek(CarType** head2, CarInfo** head1)
+{
+	cleardevice();
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+    setcolor(BLACK);
+	sys_edit editBox1, editBox2, editBox3, editBox4, editBox5, editBox6, editBox7;
+	char type1[20] = { '\0' }, type2[20] = { '\0' }, type3[20] = { '\0' }, type4[20] = { '\0' }, type5[20] = { '\0' }, type6[20] = { '\0' }, type7[20] = { '\0' };
+
+	editBox1.create(false);
+	editBox1.move(250, 50);
+	editBox1.size(200, 30);
+	editBox1.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox1.setcolor(BLACK);
+	editBox1.setfont(20, 0, "宋体");
+	editBox1.visable(TRUE);
+	editBox1.setfocus();   //车辆类型名称输入框
+	outtextxy(160, 55, "车辆类型名称");
+
+	editBox2.create(false);
+	editBox2.move(250, 100);
+	editBox2.size(200, 30);
+	editBox2.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox2.setcolor(BLACK);
+	editBox2.setfont(20, 0, "宋体");
+	editBox2.visable(TRUE);
+	editBox2.setfocus();   //车辆类型名称输入框
+	outtextxy(160, 105, "车辆类型名称");
+
+	editBox3.create(false);
+	editBox3.move(250, 150);
+	editBox3.size(200, 30);
+	editBox3.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox3.setcolor(BLACK);
+	editBox3.setfont(20, 0, "宋体");
+	editBox3.visable(TRUE);
+	editBox3.setfocus();   //车辆类型名称输入框
+	outtextxy(160, 155, "车辆类型名称");
+
+	editBox4.create(false);
+	editBox4.move(250, 200);
+	editBox4.size(200, 30);
+	editBox4.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox4.setcolor(BLACK);
+	editBox4.setfont(20, 0, "宋体");
+	editBox4.visable(TRUE);
+	editBox4.setfocus();   //车辆类型名称输入框
+	outtextxy(160, 205, "车辆类型名称");
+
+	editBox5.create(false);
+	editBox5.move(250, 250);
+	editBox5.size(200, 30);
+	editBox5.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox5.setcolor(BLACK);
+	editBox5.setfont(20, 0, "宋体");
+	editBox5.visable(TRUE);
+	editBox5.setfocus();   //车辆类型名称输入框
+	outtextxy(160, 255, "车辆类型名称");
+
+	editBox6.create(false);
+	editBox6.move(250, 300);
+	editBox6.size(200, 30);
+	editBox6.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox6.setcolor(BLACK);
+	editBox6.setfont(20, 0, "宋体");
+	editBox6.visable(TRUE);
+	editBox6.setfocus();   //车辆类型名称输入框
+	outtextxy(160, 305, "车辆类型名称");
+
+	editBox7.create(false);
+	editBox7.move(250, 350);
+	editBox7.size(200, 30);
+	editBox7.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox7.setcolor(BLACK);
+	editBox7.setfont(20, 0, "宋体");
+	editBox7.visable(TRUE);
+	editBox7.setfocus();   //车辆类型名称输入框
+	outtextxy(160, 355, "车辆类型名称");
+
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	fillellipse(430, 600, 40, 20);
+	setfont(15, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	outtextxy(416, 592, "确定");   //确定按钮
+
+	int x, y, down, Max = 50;
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;    
+		down = msg.is_down(); 
+
+		if (x >= 390 && x <= 470 && y >= 580 && y <= 620 && down)
+		{
+			editBox1.gettext(Max, type1);
+			editBox2.gettext(Max, type2);
+			editBox3.gettext(Max, type3);
+			editBox4.gettext(Max, type4);
+			editBox5.gettext(Max, type5);
+			editBox6.gettext(Max, type6);
+			editBox7.gettext(Max, type7);
+			break;
+		}
+	}
+	flushkey();
+	cleardevice();
+	closegraph();
+	initgraph(1600, 1000, INIT_RENDERMANUAL);
+	setbkcolor(WHITE);
+	
+	editBox1.destory();
+	editBox2.destory();
+	editBox3.destory();
+	editBox4.destory();
+	editBox5.destory();
+	editBox6.destory();
+	editBox7.destory();
+	setfont(20, 0, "楷体");
+	setbkmode(TRANSPARENT);
+
+	CarInfo* p1 = *head1;
+	CarType* p2 = *head2;
+	int i = 0, flag = 0;
+	if (strlen(type1) == 0)
+	{
+		while (p1->next != NULL)
+		{
+			p2 = *head2;
+			p1 = p1->next;
+			while (p2->next != NULL)
+			{
+				p2 = p2->next;
+				if (p1->TypeNumber == p2->TypeNumber)
+				{
+					flag = 1;
+					break;
+				}
+			}
+			if (flag == 0 || p1->RentalStatus == 'y')
+				continue;
+			if(p1->RentalStatus == 'n')
+				xyprintf(20, 20+i*30, "车辆类型：%-13s 车辆名称：%-12s 排挡方式：%-8s 每日租金：%.1f", p2->TypeName, p1->CarName, p1->Gear, p1->DailyRent);
+			i++;
+		}
+	}
+
+	else if (strlen(type2) == 0)
+	{
+		while (p1->next != NULL)
+		{
+			p2 = *head2;
+			p1 = p1->next;
+			while (p2->next != NULL)
+			{
+				p2 = p2->next;
+				if (p1->TypeNumber == p2->TypeNumber)
+					break;
+			}
+			if (strcmp(p2->TypeName, type1) != 0)
+				continue;
+			xyprintf(20, 20 + i * 30, "车辆类型：%-13s 车辆名称：%-12s 排挡方式：%-8s 每日租金：%.1f", p2->TypeName, p1->CarName, p1->Gear, p1->DailyRent);
+			i++;
+		}
+	}
+
+	else if (strlen(type3) == 0)
+	{
+		while (p1->next != NULL)
+		{
+			p2 = *head2;
+			p1 = p1->next;
+			while (p2->next != NULL)
+			{
+				p2 = p2->next;
+				if (p1->TypeNumber == p2->TypeNumber)
+					break;
+			}
+			if (strcmp(p2->TypeName, type1) != 0 && strcmp(p2->TypeName, type2) != 0)
+				continue;
+			xyprintf(20, 20 + i * 30, "车辆类型：%-13s 车辆名称：%-12s 排挡方式：%-8s 每日租金：%.1f", p2->TypeName, p1->CarName, p1->Gear, p1->DailyRent);
+			i++;
+		}
+	}
+
+	else if (strlen(type4) == 0)
+	{
+		while (p1->next != NULL)
+		{
+			p2 = *head2;
+			p1 = p1->next;
+			while (p2->next != NULL)
+			{
+				p2 = p2->next;
+				if (p1->TypeNumber == p2->TypeNumber)
+					break;
+			}
+			if (strcmp(p2->TypeName, type1) != 0 && strcmp(p2->TypeName, type2) != 0  &&strcmp(p2->TypeName, type3) != 0)
+				continue;
+			xyprintf(20, 20 + i * 30, "车辆类型：%-13s 车辆名称：%-12s 排挡方式：%-8s 每日租金：%.1f", p2->TypeName, p1->CarName, p1->Gear, p1->DailyRent);
+			i++;
+		}
+	}
+
+	else if (strlen(type5) == 0)
+	{
+		while (p1->next != NULL)
+		{
+			p2 = *head2;
+			p1 = p1->next;
+			while (p2->next != NULL)
+			{
+				p2 = p2->next;
+				if (p1->TypeNumber == p2->TypeNumber)
+					break;
+			}
+			if (strcmp(p2->TypeName, type1) != 0 && strcmp(p2->TypeName, type2) != 0 && strcmp(p2->TypeName, type3) != 0 && strcmp(p2->TypeName, type4) != 0)
+				continue;
+			xyprintf(20, 20 + i * 30, "车辆类型：%-13s 车辆名称：%-12s 排挡方式：%-8s 每日租金：%.1f", p2->TypeName, p1->CarName, p1->Gear, p1->DailyRent);
+			i++;
+		}
+	}
+	getch();
+}
+
+/*
+*函数名称：CarInfo_Seek
+**功能：车辆基本信息的查找
+**参数：车辆基本信息链表头结点head1
+**返回值：无
+*/
+void CarInfo_Seek(CarInfo** head1)
+{
+carinfos_start:
+	CarInfo* p = *head1;
+	cleardevice();
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	setcolor(BLACK);
+	sys_edit editBox1, editBox2, editBox3;
+
+	editBox1.create(false);
+	editBox1.move(250, 50);
+	editBox1.size(200, 30);
+	editBox1.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox1.setcolor(BLACK);
+	editBox1.setfont(20, 0, "宋体");
+	editBox1.visable(TRUE);
+	editBox1.setfocus();   //车牌号码输入框
+	outtextxy(160, 55, "车牌号码");
+
+	editBox2.create(false);
+	editBox2.move(250, 100);
+	editBox2.size(200, 30);
+	editBox2.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox2.setcolor(BLACK);
+	editBox2.setfont(20, 0, "宋体");
+	editBox2.visable(TRUE);
+	editBox2.setfocus();   //车辆名称输入框
+	outtextxy(160, 105, "车辆名称");
+
+	editBox3.create(false);
+	editBox3.move(250, 150);
+	editBox3.size(200, 30);
+	editBox3.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox3.setcolor(BLACK);
+	editBox3.setfont(20, 0, "宋体");
+	editBox3.visable(TRUE);
+	editBox3.setfocus();   //出租状态输入框
+	outtextxy(160, 155, "出租状态");
+
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	fillellipse(430, 600, 40, 20);
+	setfont(15, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	outtextxy(416, 592, "确定");   //确定按钮
+
+	int x, y, down, Max = 50;
+	char CarNumber[20] = { '\0' }, CarName[20] = { '\0' }, status[5] = { '\0' };
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;
+		down = msg.is_down();
+
+		if (x >= 390 && x <= 470 && y >= 580 && y <= 620 && down)
+		{
+			editBox1.gettext(Max, CarNumber);
+			editBox2.gettext(Max, CarName);
+			editBox3.gettext(Max, status);
+			break;
+		}
+	}
+	flushkey();
+	cleardevice();
+	closegraph();
+	initgraph(1600, 1000, INIT_RENDERMANUAL);
+	setbkcolor(WHITE);
+
+	editBox1.destory();
+	editBox2.destory();
+	editBox3.destory();
+
+	setfont(20, 0, "楷体");
+	setbkmode(TRANSPARENT);
+
+	FILE* fp;
+	fopen_s(&fp, "F:\\QueryResultsOfBasicCarInformation.csv", "w+");
+	int i = 0, j;
+	char col[7][20] = { "车辆编号","车牌号","车辆类型编码","车辆名称","排挡方式","每日租金","出租状态" }, CarID[10] = { '\0' }, DailyRent[10] = { '\0' }, TypeNumber[5] = { '\0' }, Status[5] = { '\0' };
+	for (j = 0; j < 7; j++)
+	{
+		fputs(col[j], fp);
+		fputs(",", fp);
+	}
+	fputs("\n", fp);
+	if (strlen(CarNumber) == 0 && strlen(CarName) == 0 && strlen(status) == 0)
+	{
+		while (p->next != NULL)
+		{
+			p = p->next;
+			if (p->RentalStatus == 'y' || p->RentalStatus == 'n')
+			{
+				xyprintf(20, 60 + i * 30, "车辆编号:%-2d 车牌号码:%-8s 车辆类型编码:%c 车辆名称:%-12s 排挡方式:%-8s 每日租金:%.1f 出租状态:%c", p->CarID, p->CarNumber, p->TypeNumber, p->CarName, p->Gear, p->DailyRent, p->RentalStatus);
+				_itoa_s(p->CarID, CarID, 10);
+				_itoa_s(p->DailyRent, DailyRent, 10);
+				TypeNumber[0] = p->TypeNumber;
+				Status[0] = p->RentalStatus;
+				fputs(CarID, fp);
+				fputs(",", fp);
+				fputs(p->CarNumber, fp);
+				fputs(",", fp);
+				fputs(TypeNumber, fp);
+				fputs(",", fp);
+				fputs(p->CarName, fp);
+				fputs(",", fp);
+				fputs(p->Gear, fp);
+				fputs(",", fp);
+				fputs(DailyRent, fp);
+				fputs(",", fp);
+				fputs(Status, fp);
+				fputs("\n", fp);
+			
+			}
+			i++;
+		}
+	}
+	else if (strlen(CarNumber) != 0 && strlen(CarName) == 0 && strlen(status) == 0)
+	{
+		while (p->next != NULL)
+		{
+			p = p->next;
+			if (strstr(p->CarNumber, CarNumber) != NULL)
+			{
+				xyprintf(20, 60+ i * 30, "车辆编号:%-2d 车牌号码:%-8s 车辆类型编码:%c 车辆名称:%-12s 排挡方式:%-8s 每日租金:%.1f 出租状态:%c", p->CarID, p->CarNumber, p->TypeNumber, p->CarName, p->Gear, p->DailyRent, p->RentalStatus);
+				_itoa_s(p->CarID, CarID, 10);
+				_itoa_s(p->DailyRent, DailyRent, 10);
+				TypeNumber[0] = p->TypeNumber;
+				Status[0] = p->RentalStatus;
+				fputs(CarID, fp);
+				fputs(",", fp);
+				fputs(p->CarNumber, fp);
+				fputs(",", fp);
+				fputs(TypeNumber, fp);
+				fputs(",", fp);
+				fputs(p->CarName, fp);
+				fputs(",", fp);
+				fputs(p->Gear, fp);
+				fputs(",", fp);
+				fputs(DailyRent, fp);
+				fputs(",", fp);
+				fputs(Status, fp);
+				fputs("\n", fp);
+				i++;
+			}
+		}
+	}
+	else if (strlen(CarNumber) == 0 && strlen(CarName) != 0 && strlen(status) == 0)
+	{
+		while (p->next != NULL)
+		{
+			p = p->next;
+			if (strstr(p->CarName, CarName) != NULL)
+			{
+				xyprintf(20, 60 + i * 30, "车辆编号:%-2d 车牌号码:%-8s 车辆类型编码:%c 车辆名称:%-12s 排挡方式:%-8s 每日租金:%.1f 出租状态:%c", p->CarID, p->CarNumber, p->TypeNumber, p->CarName, p->Gear, p->DailyRent, p->RentalStatus);
+				_itoa_s(p->CarID, CarID, 10);
+				_itoa_s(p->DailyRent, DailyRent, 10);
+				TypeNumber[0] = p->TypeNumber;
+				Status[0] = p->RentalStatus;
+				fputs(CarID, fp);
+				fputs(",", fp);
+				fputs(p->CarNumber, fp);
+				fputs(",", fp);
+				fputs(TypeNumber, fp);
+				fputs(",", fp);
+				fputs(p->CarName, fp);
+				fputs(",", fp);
+				fputs(p->Gear, fp);
+				fputs(",", fp);
+				fputs(DailyRent, fp);
+				fputs(",", fp);
+				fputs(Status, fp);
+				fputs("\n", fp);
+				i++;
+			}
+		}
+	}
+	else if (strlen(CarNumber) == 0 && strlen(CarName) == 0 && strlen(status) != 0)
+	{
+		while (p->next != NULL)
+		{
+			p = p->next;
+			if (p->RentalStatus == status[0])
+			{
+				xyprintf(20, 60 + i * 30, "车辆编号:%-2d 车牌号码:%-8s 车辆类型编码:%c 车辆名称:%-12s 排挡方式:%-8s 每日租金:%.1f 出租状态:%c", p->CarID, p->CarNumber, p->TypeNumber, p->CarName, p->Gear, p->DailyRent, p->RentalStatus);
+				_itoa_s(p->CarID, CarID, 10);
+				_itoa_s(p->DailyRent, DailyRent, 10);
+				TypeNumber[0] = p->TypeNumber;
+				Status[0] = p->RentalStatus;
+				fputs(CarID, fp);
+				fputs(",", fp);
+				fputs(p->CarNumber, fp);
+				fputs(",", fp);
+				fputs(TypeNumber, fp);
+				fputs(",", fp);
+				fputs(p->CarName, fp);
+				fputs(",", fp);
+				fputs(p->Gear, fp);
+				fputs(",", fp);
+				fputs(DailyRent, fp);
+				fputs(",", fp);
+				fputs(Status, fp);
+				fputs("\n", fp);
+				i++;
+			}
+		}
+	}
+	else if (strlen(CarNumber) != 0 && strlen(CarName) != 0 && strlen(status) == 0)
+	{
+		while (p->next != NULL)
+		{
+			p = p->next;
+			if (strstr(p->CarName, CarName) != NULL && strstr(p->CarNumber, CarNumber) !=NULL)
+			{
+				xyprintf(20, 60 + i * 30, "车辆编号:%-2d 车牌号码:%-8s 车辆类型编码:%c 车辆名称:%-12s 排挡方式:%-8s 每日租金:%.1f 出租状态:%c", p->CarID, p->CarNumber, p->TypeNumber, p->CarName, p->Gear, p->DailyRent, p->RentalStatus);
+				_itoa_s(p->CarID, CarID, 10);
+				_itoa_s(p->DailyRent, DailyRent, 10);
+				TypeNumber[0] = p->TypeNumber;
+				Status[0] = p->RentalStatus;
+				fputs(CarID, fp);
+				fputs(",", fp);
+				fputs(p->CarNumber, fp);
+				fputs(",", fp);
+				fputs(TypeNumber, fp);
+				fputs(",", fp);
+				fputs(p->CarName, fp);
+				fputs(",", fp);
+				fputs(p->Gear, fp);
+				fputs(",", fp);
+				fputs(DailyRent, fp);
+				fputs(",", fp);
+				fputs(Status, fp);
+				fputs("\n", fp);
+				i++;
+			}
+		}
+	}
+	else if (strlen(CarNumber) != 0 && strlen(CarName) == 0 && strlen(status) != 0)
+	{
+		while (p->next != NULL)
+		{
+			p = p->next;
+			if (strstr(p->CarNumber, CarNumber) != NULL && p->RentalStatus == status[0])
+			{
+				xyprintf(20, 60 + i * 30, "车辆编号:%-2d 车牌号码:%-8s 车辆类型编码:%c 车辆名称:%-12s 排挡方式:%-8s 每日租金:%.1f 出租状态:%c", p->CarID, p->CarNumber, p->TypeNumber, p->CarName, p->Gear, p->DailyRent, p->RentalStatus);
+				_itoa_s(p->CarID, CarID, 10);
+				_itoa_s(p->DailyRent, DailyRent, 10);
+				TypeNumber[0] = p->TypeNumber;
+				Status[0] = p->RentalStatus;
+				fputs(CarID, fp);
+				fputs(",", fp);
+				fputs(p->CarNumber, fp);
+				fputs(",", fp);
+				fputs(TypeNumber, fp);
+				fputs(",", fp);
+				fputs(p->CarName, fp);
+				fputs(",", fp);
+				fputs(p->Gear, fp);
+				fputs(",", fp);
+				fputs(DailyRent, fp);
+				fputs(",", fp);
+				fputs(Status, fp);
+				fputs("\n", fp);
+				i++;
+			}
+		}
+	}
+	else if (strlen(CarNumber) == 0 && strlen(CarName) != 0 && strlen(status) != 0)
+	{
+		while (p->next != NULL)
+		{
+			p = p->next;
+			if (strstr(p->CarName, CarName) != NULL && p->RentalStatus == status[0])
+			{
+				xyprintf(20, 60 + i * 30, "车辆编号:%-2d 车牌号码:%-8s 车辆类型编码:%c 车辆名称:%-12s 排挡方式:%-8s 每日租金:%.1f 出租状态:%c", p->CarID, p->CarNumber, p->TypeNumber, p->CarName, p->Gear, p->DailyRent, p->RentalStatus);
+				_itoa_s(p->CarID, CarID, 10);
+				_itoa_s(p->DailyRent, DailyRent, 10);
+				TypeNumber[0] = p->TypeNumber;
+				Status[0] = p->RentalStatus;
+				fputs(CarID, fp);
+				fputs(",", fp);
+				fputs(p->CarNumber, fp);
+				fputs(",", fp);
+				fputs(TypeNumber, fp);
+				fputs(",", fp);
+				fputs(p->CarName, fp);
+				fputs(",", fp);
+				fputs(p->Gear, fp);
+				fputs(",", fp);
+				fputs(DailyRent, fp);
+				fputs(",", fp);
+				fputs(Status, fp);
+				fputs("\n", fp);
+				i++;
+			}
+		}
+	}
+	else {
+		while (p->next != NULL)
+		{
+			p = p->next;
+			if (strstr(p->CarName, CarName) != NULL && strstr(p->CarNumber, CarNumber) != NULL && p->RentalStatus == status[0])
+			{
+				xyprintf(20, 60 + i * 30, "车辆编号:%-2d 车牌号码:%-8s 车辆类型编码:%c 车辆名称:%-12s 排挡方式:%-8s 每日租金:%.1f 出租状态:%c", p->CarID, p->CarNumber, p->TypeNumber, p->CarName, p->Gear, p->DailyRent, p->RentalStatus);
+				_itoa_s(p->CarID, CarID, 10);
+				_itoa_s(p->DailyRent, DailyRent, 10);
+				TypeNumber[0] = p->TypeNumber;
+				Status[0] = p->RentalStatus;
+				fputs(CarID, fp);
+				fputs(",", fp);
+				fputs(p->CarNumber, fp);
+				fputs(",", fp);
+				fputs(TypeNumber, fp);
+				fputs(",", fp);
+				fputs(p->CarName, fp);
+				fputs(",", fp);
+				fputs(p->Gear, fp);
+				fputs(",", fp);
+				fputs(DailyRent, fp);
+				fputs(",", fp);
+				fputs(Status, fp);
+				fputs("\n", fp);
+				i++;
+			}
+		}
+	}
+	fclose(fp);
+	setcolor(BLACK);
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+
+	bar3d(40, 10, 140, 40, 2, 1);
+	outtextxy(70, 15, "导出");
+
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;
+		down = msg.is_down();
+
+		if (x >= 40 && x <= 140 && y >= 10 && y <= 40 && down)
+		{
+			outtextxy(200, 15, "导出成功!(按enter继续)");
+			break;
+		}
+	}
+	getch();
+}
+
+/*
+**函数名称：OrderInfo_Seek
+**功能：租车订单信息的查找
+**参数：车辆基本信息链表头结点head1
+**返回值：无
+*/
+void OrderInfo_Seek(CarInfo** head1)
+{
+orderinfos_start:
+	CarInfo* p1 = *head1;
+	OrderInfo* p2;
+	cleardevice();
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	setcolor(BLACK);
+
+	bar3d(150, 40, 390, 70, 2, 1);
+	outtextxy(200, 45, "按客人信息查找");
+
+	bar3d(150, 90, 390, 120, 2, 1);
+	outtextxy(200, 95, "按车辆信息查找");
+
+	bar3d(150, 140, 390, 170, 2, 1);
+	outtextxy(200, 145, "按租车时间查找");
+
+	bar3d(150, 240, 390, 270, 2, 1);
+	outtextxy(250, 245, "返回");
+
+	int x, y, down, Max=50, flag = 0;
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;  
+		down = msg.is_down();
+
+		if (x >= 150 && x <= 390 && y >= 40 && y <= 70 && down)
+		{
+			flag = 1;
+			break;
+		}
+		else if (x >= 150 && x <= 390 && y >= 90 && y <= 120 && down)
+		{
+			flag = 2;
+			break;
+		}
+		else if (x >= 150 && x <= 390 && y >= 140 && y <= 170 && down)
+		{
+			flag = 3;
+			break;
+		}
+		else if (x >= 150 && x <= 390 && y >= 240 && y <= 270 && down)
+		{
+			flag = 0;
+			break;
+		}
+	}
+	sys_edit editBox1, editBox2, editBox3, editBox4, editBox5, editBox6;
+	FILE* fp;
+	fopen_s(&fp, "F:\\CarRentalOrderInformationQueryResults.csv", "w+");
+	char col[11][20] = { "订单编号","身份证号","客人姓名","手机号码","租用车辆编号","取车时间","预约还车时间","押金","实际还车时间","应缴费用","实缴费用" };
+	int j;
+	for (j = 0; j < 11; j++)
+	{
+		fputs(col[j], fp);
+		fputs(",", fp);
+	}
+	fputs("\n", fp);
+	char RentalCarNumber[5] = { '\0' }, Deposit[10] = { '\0' }, Cost[10] = { '\0' }, RealCost[10] = { '\0' };
+	if (flag == 1)
+	{
+		cleardevice();
+
+		editBox1.create(false);
+		editBox1.move(250, 50);
+		editBox1.size(200, 30);
+		editBox1.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+		editBox1.setcolor(BLACK);
+		editBox1.setfont(20, 0, "宋体");
+		editBox1.visable(TRUE);
+		editBox1.setfocus();   //身份证号输入框
+		outtextxy(160, 55, "身份证号");
+
+		editBox2.create(false);
+		editBox2.move(250, 100);
+		editBox2.size(200, 30);
+		editBox2.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+		editBox2.setcolor(BLACK);
+		editBox2.setfont(20, 0, "宋体");
+		editBox2.visable(TRUE);
+		editBox2.setfocus();   //手机号码输入框
+		outtextxy(160, 105, "手机号码");
+
+		setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+		fillellipse(430, 600, 40, 20);
+		setfont(15, 0, "华文行楷");
+		setbkmode(TRANSPARENT);
+		outtextxy(416, 592, "确定");   //确定按钮
+
+		char ID[25], phonenumber[20];
+		for (; is_run(); delay_fps(60))
+		{
+			mouse_msg msg = { 0 };
+			while (mousemsg())
+			{
+				msg = getmouse();
+			}
+			x = msg.x;
+			y = msg.y;  
+			down = msg.is_down(); 
+
+			if (x >= 390 && x <= 470 && y >= 580 && y <= 620 && down)
+			{
+				editBox1.gettext(Max, ID);
+				editBox2.gettext(Max, phonenumber);
+				break;
+			}
+		} 
+		editBox1.destory();
+		editBox2.destory();
+		flushkey();
+		cleardevice();
+		closegraph();
+		initgraph(1600, 1000, INIT_RENDERMANUAL);
+		setbkcolor(WHITE);
+
+		setfont(20, 0, "楷体");
+		setbkmode(TRANSPARENT);
+
+		int i = 0;
+		while (p1->next != NULL)
+		{
+			p1 = p1->next;
+			if (p1->order != NULL)
+			{
+				p2 = p1->order;
+				while (p2 != NULL)
+				{
+					if (strcmp(p2->IDNumber, ID) == 0 || strcmp(p2->PhoneNumber, phonenumber) == 0)
+					{
+						xyprintf(10, 60 + 30* i, "订单编号:%s,身份证号:%s,顾客姓名:%-6s,电话号码:%s,租用车辆编号:%-2d", p2->OrderNumber, p2->IDNumber, p2->CustomerName, p2->PhoneNumber, p2->RentalCarNumber);
+						i++;
+						xyprintf(10, 50 + 30 * i, "取车时间:%s,预计还车时间:%s,押金:%-6.1f,实际还车时间:%s,应缴费用:%-6.1f,实缴费用:%-6.1f", p2->PickTime, p2->ExpectedReturnTime, p2->Deposit, p2->RealReturnTime, p2->OriginalCost, p2->RealCost);
+						i++;
+						_itoa_s(p2->RentalCarNumber, RentalCarNumber, 10);
+						_itoa_s((int)p2->Deposit, Deposit, 10);
+						_itoa_s((int)p2->OriginalCost, Cost, 10);
+						_itoa_s((int)p2->RealCost, RealCost, 10);
+						fputs(p2->OrderNumber, fp);
+						fputs(",", fp);
+						fputs(p2->IDNumber, fp);
+						fputs(",", fp);
+						fputs(p2->CustomerName, fp);
+						fputs(",", fp);
+						fputs(p2->PhoneNumber, fp);
+						fputs(",", fp);
+						fputs(RentalCarNumber, fp);
+						fputs(",", fp);
+						fputs(p2->PickTime, fp);
+						fputs(",", fp);
+						fputs(p2->ExpectedReturnTime, fp);
+						fputs(",", fp);
+						fputs(Deposit, fp);
+						fputs(",", fp);
+						fputs(p2->RealReturnTime, fp);
+						fputs(",", fp);
+						fputs(Cost, fp);
+						fputs(",", fp);
+						fputs(RealCost, fp);
+						fputs("\n", fp);
+					}
+					p2 = p2->next;
+				}
+			}
+		}
+
+	}
+
+	else if (flag == 2)
+	{
+		cleardevice();
+
+		editBox3.create(false);
+		editBox3.move(250, 50);
+		editBox3.size(200, 30);
+		editBox3.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+		editBox3.setcolor(BLACK);
+		editBox3.setfont(20, 0, "宋体");
+		editBox3.visable(TRUE);
+		editBox3.setfocus();   //车牌号码输入框
+		outtextxy(160, 55, "车牌号码");
+
+		editBox4.create(false);
+		editBox4.move(250, 100);
+		editBox4.size(200, 30);
+		editBox4.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+		editBox4.setcolor(BLACK);
+		editBox4.setfont(20, 0, "宋体");
+		editBox4.visable(TRUE);
+		editBox4.setfocus();   //车辆名称输入框
+		outtextxy(160, 105, "车辆名称");
+
+		setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+		fillellipse(430, 600, 40, 20);
+		setfont(15, 0, "华文行楷");
+		setbkmode(TRANSPARENT);
+		outtextxy(416, 592, "确定");   //确定按钮
+
+		char CarNumber[25], CarName[20];
+		for (; is_run(); delay_fps(60))
+		{
+			mouse_msg msg = { 0 };
+			while (mousemsg())
+			{
+				msg = getmouse();
+			}
+			x = msg.x;
+			y = msg.y; 
+			down = msg.is_down(); 
+
+			if (x >= 390 && x <= 470 && y >= 580 && y <= 620 && down)
+			{
+				editBox3.gettext(Max, CarNumber);
+				editBox4.gettext(Max, CarName);
+				break;
+			}
+		} 
+		editBox3.destory();
+		editBox4.destory();
+		flushkey();
+		cleardevice();
+		closegraph();
+		initgraph(1600, 1000, INIT_RENDERMANUAL);
+		setbkcolor(WHITE);
+
+		setfont(20, 0, "楷体");
+		setbkmode(TRANSPARENT);
+
+		int i = 0;
+		while (p1->next != NULL)
+		{
+			p1 = p1->next;
+			if (strcmp(p1->CarNumber, CarNumber) == 0 || strcmp(p1->CarName, CarName) == 0)
+			{
+				p2 = p1->order;
+				while (p2 != NULL)
+				{
+					xyprintf(10, 60 + 30 * i, "订单编号:%s,身份证号:%s,顾客姓名:%-6s,电话号码:%s,租用车辆编号:%-2d", p2->OrderNumber, p2->IDNumber, p2->CustomerName, p2->PhoneNumber, p2->RentalCarNumber);
+					i++;
+					xyprintf(10, 50 + 30 * i, "取车时间:%s,预计还车时间:%s,押金:%-6.1f,实际还车时间:%s,应缴费用:%-6.1f,实缴费用:%-6.1f", p2->PickTime, p2->ExpectedReturnTime, p2->Deposit, p2->RealReturnTime, p2->OriginalCost, p2->RealCost);
+					i++;
+					_itoa_s(p2->RentalCarNumber, RentalCarNumber, 10);
+					_itoa_s((int)p2->Deposit, Deposit, 10);
+					_itoa_s((int)p2->OriginalCost, Cost, 10);
+					_itoa_s((int)p2->RealCost, RealCost, 10);
+					fputs(p2->OrderNumber, fp);
+					fputs(",", fp);
+					fputs(p2->IDNumber, fp);
+					fputs(",", fp);
+					fputs(p2->CustomerName, fp);
+					fputs(",", fp);
+					fputs(p2->PhoneNumber, fp);
+					fputs(",", fp);
+					fputs(RentalCarNumber, fp);
+					fputs(",", fp);
+					fputs(p2->PickTime, fp);
+					fputs(",", fp);
+					fputs(p2->ExpectedReturnTime, fp);
+					fputs(",", fp);
+					fputs(Deposit, fp);
+					fputs(",", fp);
+					fputs(p2->RealReturnTime, fp);
+					fputs(",", fp);
+					fputs(Cost, fp);
+					fputs(",", fp);
+					fputs(RealCost, fp);
+					fputs("\n", fp);
+					p2 = p2->next;
+				}
+			}
+		}
+	}
+
+	else if (flag == 3)
+	{
+	    cleardevice();
+
+	    editBox5.create(false);
+	    editBox5.move(250, 50);
+	    editBox5.size(200, 30);
+        editBox5.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+        editBox5.setcolor(BLACK);
+        editBox5.setfont(20, 0, "宋体");
+        editBox5.visable(TRUE);
+        editBox5.setfocus();   //租车时间范围输入框
+        outtextxy(120, 55, "租车时间范围");
+
+        editBox6.create(false);
+        editBox6.move(250, 100);
+        editBox6.size(200, 30);
+        editBox6.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+        editBox6.setcolor(BLACK);
+        editBox6.setfont(20, 0, "宋体");
+        editBox6.visable(TRUE);
+        editBox6.setfocus();   
+        //outtextxy(160, 105, "");
+
+        setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+        fillellipse(430, 600, 40, 20);
+        setfont(15, 0, "华文行楷");
+        setbkmode(TRANSPARENT);
+        outtextxy(416, 592, "确定");   //确定按钮
+
+        char datemin[20], datemax[20];
+        for (; is_run(); delay_fps(60))
+        {
+	        mouse_msg msg = { 0 };
+	        while (mousemsg())
+	        {
+		         msg = getmouse();
+	        }
+	        x = msg.x;
+	        y = msg.y;  
+	        down = msg.is_down(); 
+
+	        if (x >= 390 && x <= 470 && y >= 580 && y <= 620 && down)
+	        {
+		        editBox5.gettext(Max, datemin);
+		        editBox6.gettext(Max, datemax);
+		        break;
+	        }
+        }  
+         editBox5.destory();
+         editBox6.destory();
+         flushkey();
+         cleardevice();
+         closegraph();
+         initgraph(1600, 1000, INIT_RENDERMANUAL);
+         setbkcolor(WHITE);
+
+         setfont(20, 0, "楷体");
+         setbkmode(TRANSPARENT);
+
+         int i = 0, j;
+         char date[15] = { '\0' };
+         while (p1->next != NULL)
+         {
+	         p1 = p1->next;
+	         if (p1->order != NULL)
+	         {
+		         p2 = p1->order;
+		         while (p2 != NULL)
+		         {
+			         for (j = 0; j < 8; j++)
+			         {
+				         date[j] = p2->OrderNumber[j];
+			         }
+			         if (atoi(date) >= atoi(datemin) && atoi(date) <= atoi(datemax))
+			         {
+						 xyprintf(10, 60 + 30 * i, "订单编号:%s,身份证号:%s,顾客姓名:%-6s,电话号码:%s,租用车辆编号:%-2d", p2->OrderNumber, p2->IDNumber, p2->CustomerName, p2->PhoneNumber, p2->RentalCarNumber);
+						 i++;
+						 xyprintf(10, 50 + 30 * i, "取车时间:%s,预计还车时间:%s,押金:%-6.1f,实际还车时间:%s,应缴费用:%-6.1f,实缴费用:%-6.1f", p2->PickTime, p2->ExpectedReturnTime, p2->Deposit, p2->RealReturnTime, p2->OriginalCost, p2->RealCost);
+						 i++;
+						 _itoa_s(p2->RentalCarNumber, RentalCarNumber, 10);
+						 _itoa_s((int)p2->Deposit, Deposit, 10);
+						 _itoa_s((int)p2->OriginalCost, Cost, 10);
+						 _itoa_s((int)p2->RealCost, RealCost, 10);
+						 fputs(p2->OrderNumber, fp);
+						 fputs(",", fp);
+						 fputs(p2->IDNumber, fp);
+						 fputs(",", fp);
+						 fputs(p2->CustomerName, fp);
+						 fputs(",", fp);
+						 fputs(p2->PhoneNumber, fp);
+						 fputs(",", fp);
+						 fputs(RentalCarNumber, fp);
+						 fputs(",", fp);
+						 fputs(p2->PickTime, fp);
+						 fputs(",", fp);
+						 fputs(p2->ExpectedReturnTime, fp);
+						 fputs(",", fp);
+						 fputs(Deposit, fp);
+						 fputs(",", fp);
+						 fputs(p2->RealReturnTime, fp);
+						 fputs(",", fp);
+						 fputs(Cost, fp);
+						 fputs(",", fp);
+						 fputs(RealCost, fp);
+						 fputs("\n", fp);
+			         }
+			         p2 = p2->next;
+		         }
+	         }
+         }
+    }
+
+	if (flag == 0)
+		return;
+
+	fclose(fp);
+	setcolor(BLACK);
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+
+	bar3d(40, 10, 140, 40, 2, 1);
+	outtextxy(70, 15, "导出");
+
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;
+		down = msg.is_down();
+
+		if (x >= 40 && x <= 140 && y >= 10 && y <= 40 && down)
+		{
+			outtextxy(200, 15, "导出成功!(按enter继续)");
+			break;
+		}
+	}
+    getch();
+}
+
+/*
+**函数名称：Type_Statistics
+**功能：统计车辆类型总数，已出租数，未出租数
+**参数：车辆基本信息链表头结点head1，车辆类型信息链表头结点head2
+**返回值：无
+*/
+void Type_Statistics(CarInfo** head1, CarType** head2)
+{
+	cleardevice();
+	setfont(20, 0, "楷体");
+	setbkmode(TRANSPARENT);
+
+	xyprintf(10, 10, "%-15s %-10s %-10s %-10s","车辆类型","车辆总数","已出租数","未出租数");
+	int car_sum, rented, not_rented, i = 0;
+	CarInfo* p1 = *head1;
+	CarType* p2 = *head2;
+	int flag = 0;
+	while (p2->next != NULL)
+	{
+		car_sum = 0;
+		rented = 0;
+		not_rented = 0;
+		p2 = p2->next;
+		p1 = *head1;
+		while (p1->next != NULL)
+		{
+			p1 = p1->next;
+			if (p1->TypeNumber == p2->TypeNumber)
+			{
+				car_sum++;
+				if (p1->RentalStatus == 'y')
+					rented++;
+				else not_rented++;
+			}
+		}
+		if (strlen(p2->TypeName) > 13)
+			continue;
+		xyprintf(10, 40+i*30, "%-20s%-10d %-10d %-10d", p2->TypeName, car_sum, rented, not_rented);
+		i++;
+	}
+	getch();
+}
+
+/*
+**函数名称：Type_Turnover
+**功能：统计每月每种车辆类型的营业额
+**参数：车辆基本信息链表头结点head1，车辆类型信息链表头结点head2
+**返回值：无
+*/
+void Type_Turnover(CarInfo** head1, CarType** head2)
+{
+	cleardevice();
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+
+	int n = 0;
+	CarInfo* p1 = *head1;
+	CarType* p2 = *head2;
+	while (p2->next != NULL)
+	{
+		p2 = p2->next;
+		n++;
+	}  
+
+	sys_edit editBox1;
+	editBox1.create(false);
+	editBox1.move(250, 100);
+	editBox1.size(200, 30);
+	editBox1.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox1.setcolor(BLACK);
+	editBox1.setfont(20, 0, "宋体");
+	editBox1.visable(TRUE);
+	editBox1.setfocus();
+	outtextxy(160, 105, "月份");
+
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	fillellipse(430, 500, 40, 20);
+	setfont(15, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	outtextxy(416, 492, "确定"); 
+
+	int x, y, down, Max = 50;
+	char month[5] = { '\0' };
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y; 
+		down = msg.is_down();  
+
+		if (x >= 390 && x <= 470 && y >= 480 && y <= 520 && down)
+		{
+			editBox1.gettext(Max, month);
+			break;
+		}
+	}
+	cleardevice();
+	editBox1.destory();
+
+	setfont(30, 0, "楷体");
+	setbkmode(TRANSPARENT);
+	setcolor(BLACK);
+
+	xyprintf(120, 100, "%s月营业额(元人民币)", month);
+	setfont(15, 0, "楷体");
+	xyprintf(10, 150, "4000");
+	xyprintf(10, 190, "3500");
+	xyprintf(10, 230, "3000");
+	xyprintf(10, 270, "2500");
+	xyprintf(10, 310, "2000");
+	xyprintf(10, 350, "1500");
+	xyprintf(10, 390, "1000");
+	xyprintf(10, 430, "500");
+	xyprintf(10, 470, "0");
+	line(48, 150, 520, 150);
+	line(48, 190, 520, 190);
+	line(48, 230, 520, 230);
+	line(48, 270, 520, 270);
+	line(48, 310, 520, 310);
+	line(48, 350, 520, 350);
+	line(48, 390, 520, 390);
+	line(48, 430, 520, 430);
+	line(48, 470, 520, 470);
+	line(48, 150, 50, 470);
+	
+	p1 = *head1;
+	p2 = *head2;
+	OrderInfo* p3;
+	float profit;
+	setfillcolor(BLUE);
+	int i = 0, height, j;
+	char* record, * buf, date[20] = { '\0' };
+	while (p2->next != NULL)
+	{
+		p2 = p2->next;
+		p1 = *head1;
+		profit = 0;
+		while (p1->next != NULL)
+		{
+			p1 = p1->next;
+			if (p1->TypeNumber == p2->TypeNumber)
+			{
+				p3 = p1->order;
+				while (p3 != NULL)
+				{
+					strcpy_s(date, p3->RealReturnTime);
+					record = strtok_s(date, "/", &buf);
+					record = strtok_s(NULL, "/", &buf);
+					if (strcmp(record, month) == 0)
+					{
+						profit += p3->RealCost;
+					}
+					p3 = p3->next;
+					for (j = 0; j < 20; j++)
+						date[j] = '\0';
+				}
+			}
+		}
+		height = (profit / 4000) * 320;
+		if (strlen(p2->TypeName) > 13)
+			continue;
+		bar(75 + i * 70, 470 - height, 115 + i * 70, 470);
+		xyprintf(75 + i * 70, 480, "%s", p2->TypeName);
+		i++;
+	}
+	flushkey();
+	getch();
+}
+
+/*
+**函数名称：Car_Turnover
+**功能：统计每辆车的营业额
+**参数：车辆基本信息链表头结点head1
+**返回值：无
+*/
+void Car_Turnover(CarInfo** head1)
+{
+	cleardevice();
+	setfont(20, 0, "楷体");
+	setbkmode(TRANSPARENT);
+
+	sys_edit editBox1;
+	editBox1.create(false);
+	editBox1.move(250, 100);
+	editBox1.size(200, 30);
+	editBox1.setbgcolor(EGERGB(0xDC, 0xDC, 0xDC));
+	editBox1.setcolor(BLACK);
+	editBox1.setfont(20, 0, "宋体");
+	editBox1.visable(TRUE);
+	editBox1.setfocus();
+	outtextxy(160, 105, "年份");
+
+	setfillcolor(EGERGB(0xF5, 0xF5, 0xF5));
+	fillellipse(430, 500, 40, 20);
+	setfont(15, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	outtextxy(416, 492, "确定");
+
+	int x, y, down, Max = 50;
+	char year[5] = { '\0' };
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;
+		down = msg.is_down();
+
+		if (x >= 390 && x <= 470 && y >= 480 && y <= 520 && down)
+		{
+			editBox1.gettext(Max,year);
+			break;
+		}
+	}   //获取输入框内容
+	cleardevice();
+	editBox1.destory();
+
+	CarInfo* p1 = *head1;
+	OrderInfo* p2 = NULL;
+	int sum = 0; 
+	float turnover;
+	while (p1->next != NULL)
+	{
+		p1 = p1->next;
+		if (p1->order != NULL)
+		{
+			p2 = p1->order;
+			while (p2 != NULL)
+			{
+				sum++;
+				p2 = p2->next;
+			}
+		}
+	}   //计算总的租用次数
+	setfont(15, 0, "楷体");
+	xyprintf(10, 10, "%-12s %-15s %-8s %-8s", "车牌号", "车辆名称", "营业额", "租用率");
+	p1 = *head1;
+	int sumpercar, i = 0, j;
+	char* record, * buf, date[20] = { '\0' };
+	while (p1->next != NULL)
+	{
+		p2 = NULL;
+		sumpercar = 0;
+		turnover = 0;
+		p1 = p1->next;
+		if (p1->order != NULL)
+			p2 = p1->order;
+		while (p2 != NULL)
+		{
+			strcpy_s(date, p2->RealReturnTime);
+			record = strtok_s(date, "/", &buf);
+			if (strcmp(year, record) == 0)
+			{
+				sumpercar++;
+				turnover += p2->RealCost;
+			}
+			p2 = p2->next;
+			for (j = 0; j < 20; j++)
+				date[j] = '\0';
+		}
+		if (strlen(p1->CarName) > 16)
+			continue;
+		xyprintf(10, 30 + 30 * i, "%-12s %-15s %-8.1f %-8.2f", p1->CarNumber, p1->CarName, turnover, sumpercar * 1.0 / sum);
+		i++;
+	}
+	flushkey();
+	getch();
+}
+
+/*
+**函数名称：RentalDays
+**功能：统计出租天数
+**参数：车辆基本信息链表头结点head1
+**返回值：无
+*/
+void RentalDays(CarInfo** head1)
+{
+	cleardevice();
+	setfont(20, 0, "楷体");
+	setbkmode(TRANSPARENT);
+
+	CarInfo* p1 = *head1;
+	OrderInfo* p2 = NULL;
+	int sum = 0;
+	while (p1->next != NULL)
+	{
+		p1 = p1->next;
+		if (p1->order != NULL)
+		{
+			p2 = p1->order;
+			while (p2 != NULL)
+			{
+				sum++;
+				p2 = p2->next;
+			}
+		}
+	}
+	p1 = *head1;
+	int i = 0, j, days;
+	float Turnover;
+	while (p1->next != NULL)
+	{
+		p2 = NULL;
+		days = 0;
+		p1 = p1->next;
+		if (p1->order != NULL)
+			p2 = p1->order;
+		while (p2 != NULL)
+		{
+			days++;
+			p2 = p2->next;
+		}
+		p1->RentalDays = days;
+	}   
+	int day[50] = { 0 };
+	float profit[50] = { 0 };
+	int serial[50] = { 0 };
+	p1 = *head1;
+	while (p1->next != NULL)
+	{
+		p2 = NULL;
+		p1 = p1->next;
+		day[i] = p1->RentalDays;
+		serial[i] = i + 1;
+		Turnover = 0;
+		p2 = p1->order;
+		while (p2 != NULL)
+		{
+			Turnover += p2->RealCost;
+			p2 = p2->next;
+		}
+		profit[i] = Turnover;
+		i++;
+	}
+	int n = 0, temp1, temp2;
+	float temp3;
+	for (i = 0; i < 50; i++)
+	{
+		if (serial[i] == 0)
+			break;
+		n++;
+	}
+	for (i = 0; i < n - 1; i++)
+	{
+		for (j = n - i - 1; j > 0; j--)
+		{
+			if (day[j] > day[j - 1])
+			{
+				temp1 = day[j - 1];
+				day[j - 1] = day[j];
+				day[j] = temp1;
+				temp2 = serial[j - 1];
+				serial[j - 1] = serial[j];
+				serial[j] = temp2;
+				temp3 = profit[j - 1];
+				profit[j - 1] = profit[j];
+				profit[j] = temp3;
+			}
+		}
+	}
+	xyprintf(10, 10, "%-10s %-12s %-12s %-6s %-6s", "车牌号", "车辆名称", "累计出租天数", "营业额", "租用率");
+	for (i = 0; i < 10; i++)
+	{
+		p1 = *head1;
+		while (p1->next != NULL)
+		{
+			p1 = p1->next;
+			if (p1->CarID == serial[i])
+				break;
+		}
+		xyprintf(10, 30 + i * 30, "%-10s %-16s %-8d %-6.1f %-6.2f", p1->CarNumber, p1->CarName, day[i], profit[i], day[i] * 1.0 / sum);
+	}
+	getch();
+}
+
+/*
+**函数名称：Turnover
+**功能：统计每种车辆类型租用率
+**参数：车辆基本信息链表头结点head1,车辆分类信息链表头结点head2
+**返回值：无
+*/
+void CarType_Rate(CarInfo** head1, CarType** head2)
+{
+	cleardevice();
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	
+	CarInfo* p1 = *head1;
+	CarType* p2 = *head2;
+	OrderInfo* p3 = NULL;
+
+	int sum = 0;
+	while (p1->next != NULL)
+	{
+		p1 = p1->next;
+		if (p1->order != NULL)
+		{
+			p3 = p1->order;
+			while (p3 != NULL)
+			{
+				sum++;
+				p3 = p3->next;
+			}
+		}
+	}   //统计总的订单数
+	int type, i = 0;
+	setfont(20, 0, "楷体");
+	xyprintf(20, 10, "%-16s %-8s", "车辆类型名称", "租用率");
+	while (p2->next != NULL)
+	{
+		type = 0;
+		p2 = p2->next;
+		p1 = *head1;
+		while (p1->next != NULL)
+		{
+			p1 = p1->next;
+			if (p1->TypeNumber == p2->TypeNumber)
+			{
+				p3 = p1->order;
+				while (p3 != NULL)
+				{
+					type++;
+					p3 = p3->next;
+				}
+			}
+		}
+		if (strlen(p2->TypeName) > 13)
+			continue;
+		xyprintf(20, 40 + i * 30, "%-16s %-8.2f", p2->TypeName, type * 1.0 / sum);
+		i++;
+	}
+	getch();
+}
+
+/*
+**函数名称：DataImport
+**功能：导入csv表格数据
+**参数：车辆基本信息链表头结点head1，车辆类型信息链表头结点head2
+**返回值：无
+*/
+void DataImport(CarInfo** head1, CarType** head2)
+{
+	CarInfo* p1 = *head1;
+	CarType* p2 = *head2;
+	OrderInfo* p3;
+	FILE* fp1, * fp2, * fp3;
+	fopen_s(&fp1, "F:\\11.csv", "r");
+	fopen_s(&fp2, "F:\\22.csv", "r");
+	fopen_s(&fp3, "F:\\33.csv", "r");
+	while (p2->next != NULL)
+	{
+		p2 = p2->next;
+	}  
+	char data_row[200] = { '\0' };
+	char* record, * buf;
+	fgets(data_row, 200, fp1);
+	int i;
+	for (i = 0; i < 200; i++)
+		data_row[i] = '\0';
+	while (fgets(data_row, 200, fp1) != NULL)
+	{
+		p2->next = (CarType*)malloc(sizeof(CarType));
+		p2 = p2->next;
+		record = strtok_s(data_row, ",", &buf);
+		p2->TypeNumber = record[0];
+		record = strtok_s(NULL, ",", &buf);
+		strcpy_s(p2->TypeName, record);
+		record = strtok_s(NULL, ",", &buf);
+		p2->Quantity = atoi(record);
+		p2->next = NULL;
+		for (i = 0; i < 200; i++)
+			data_row[i] = '\0';
+	}
+	fclose(fp1);
+	while (p1->next != NULL)
+	{
+		p1 = p1->next;
+	}  
+	fgets(data_row, 200, fp2);
+	for (i = 0; i < 200; i++)
+		data_row[i] = '\0';
+	while (fgets(data_row, 200, fp2) != NULL)
+	{
+		p1->next = (CarInfo*)malloc(sizeof(CarInfo));
+		p1 = p1->next;
+		record = strtok_s(data_row, ",", &buf);
+		p1->CarID = atoi(record);
+		record = strtok_s(NULL, ",", &buf);
+		strcpy_s(p1->CarNumber, record);
+		record = strtok_s(NULL, ",", &buf);
+		p1->TypeNumber = record[0];
+		record = strtok_s(NULL, ",", &buf);
+		strcpy_s(p1->CarName, record);
+		record = strtok_s(NULL, ",", &buf);
+		strcpy_s(p1->Gear, record);
+		record = strtok_s(NULL, ",", &buf);
+		p1->DailyRent = (float)atoi(record);
+		record = strtok_s(NULL, ",", &buf);
+		p1->RentalStatus = record[0];
+		p1->next = NULL;
+		p1->order = NULL;
+		for (i = 0; i < 200; i++)
+			data_row[i] = '\0';
+	}
+	fclose(fp2);
+
+	fgets(data_row, 200, fp3);
+	for (i = 0; i < 200; i++)
+		data_row[i] = '\0';
+	char OrderNumber[20], IDNumber[20], CustomerName[20], PhoneNumber[20], RentalCarNumber[4];
+	while (fgets(data_row, 200, fp3) != NULL)
+	{
+		p1 = *head1;
+		record = strtok_s(data_row, ",", &buf);
+		strcpy_s(OrderNumber, record);
+		record = strtok_s(NULL, ",", &buf);
+		strcpy_s(IDNumber, record);
+		record = strtok_s(NULL, ",", &buf);
+		strcpy_s(CustomerName, record);
+		record = strtok_s(NULL, ",", &buf);
+		strcpy_s(PhoneNumber, record);
+		record = strtok_s(NULL, ",", &buf);
+		strcpy_s(RentalCarNumber, record);
+
+		while (p1->next != NULL)
+		{
+			p1 = p1->next;
+			if (p1->CarID == atoi(RentalCarNumber))
+				break;
+		}    //找到对应车辆
+
+		p3 = p1->order;
+		if (p3 == NULL)
+		{
+			p1->order = (OrderInfo*)malloc(sizeof(OrderInfo));
+			p3 = p1->order;
+		}
+		else {
+			while (p3->next != NULL)
+			{
+				p3 = p3->next;
+			}
+			p3->next = (OrderInfo*)malloc(sizeof(OrderInfo));
+			p3 = p3->next;
+		}   //建立新结点
+
+		strcpy_s(p3->OrderNumber, OrderNumber);
+		strcpy_s(p3->IDNumber, IDNumber);
+		strcpy_s(p3->CustomerName, CustomerName);
+		strcpy_s(p3->PhoneNumber, PhoneNumber);
+		p3->RentalCarNumber = atoi(RentalCarNumber);
+		record = strtok_s(NULL, ",", &buf);
+		strcpy_s(p3->PickTime, record);
+		record = strtok_s(NULL, ",", &buf);
+		strcpy_s(p3->ExpectedReturnTime, record);
+		record = strtok_s(NULL, ",", &buf);
+		p3->Deposit = (float)atoi(record);
+		record = strtok_s(NULL, ",", &buf);
+		strcpy_s(p3->RealReturnTime, record);
+		record = strtok_s(NULL, ",", &buf);
+		p3->OriginalCost = (float)atoi(record);
+		record = strtok_s(NULL, ",", &buf);
+		p3->RealCost = (float)atoi(record);
+		p3->next = NULL;
+
+		for (i = 0; i < 200; i++)
+			data_row[i] = '\0';
+	}   //给结点赋值
+
+	p1 = *head1;
+	while (p1->next != NULL)
+	{
+		p1 = p1->next;
+		if (p1->order == NULL)
+			p1->orderflag = 0;
+		else {
+			p1->orderflag = 1;
+			p3 = p1->order;
+			if (p3->next == NULL)
+				p3->tail = 1;
+			else {
+				while (p3->next != NULL)
+					p3->tail = 0;
+				p3->tail = 1;
+			}
+		}
+	}
+
+	setfont(20, 0, "华文行楷");
+	setbkmode(TRANSPARENT);
+	outtextxy(210, 450, "数据导入成功！");
+	getch();
+}
+
+int main()
+{
+	CarInfo* head1 = (CarInfo*)malloc(sizeof(CarInfo));
+	CarType* head2 = (CarType*)malloc(sizeof(CarType));
+	head1->next = NULL;
+	head1->order = NULL;
+	head2->next = NULL;   //创建头结点
+	int choice;
+start:
+	Initial();   //显示初始界面
+
+	int x, y, down;
+	for (; is_run(); delay_fps(60))
+	{
+		mouse_msg msg = { 0 };
+		while (mousemsg())
+		{
+			msg = getmouse();
+		}
+		x = msg.x;
+		y = msg.y;    //获取鼠标坐标
+		down = msg.is_down();   //判断鼠标是否按下
+
+		if (x >= 150 && x <= 390 && y >= 40 && y <= 70 && down)
+		{
+			if (LoadData(&head1, &head2) == 1)
+			{
+				setfont(20, 0, "华文行楷");
+				setbkmode(TRANSPARENT);
+				outtextxy(210, 450, "数据加载成功！");
+			}
+			else {
+				setfont(20, 0, "华文行楷");
+				setbkmode(TRANSPARENT);
+				outtextxy(210, 450, "数据加载失败！");
+			}
+			getch();
+			goto start;
+		}   //点击数据加载按钮时
+
+		else if (x >= 150 && x <= 390 && y >= 90 && y <= 120 && down)
+		{
+			cleardevice();   //清屏
+			choice = DataMaintenance_Interface();
+
+			if (choice == 1)
+				CarType_Input(&head2);
+			if (choice == 2)
+				CarInfo_Input(&head1, &head2);
+			if (choice == 3)
+				OrderInfo_Input(&head1);
+			if (choice == 0)
+				goto start;
+			goto start;
+		}   //点击数据录入按钮时
+
+		else if (x >= 150 && x <= 390 && y >= 140 && y <= 170 && down)
+		{
+			cleardevice();
+			choice = DataMaintenance_Interface();
+
+			if (choice == 1)
+				CarType_Modify(&head2);
+			if (choice == 2)
+				CarInfo_Modify(&head1);
+			if (choice == 3)
+				OrderInfo_Modify(&head1);
+			if (choice == 0)
+				goto start;
+			goto start;
+		}   //点击数据修改按钮时
+
+		else if (x >= 150 && x <= 390 && y >= 190 && y <= 220 && down)
+		{
+			cleardevice();
+			choice = DataMaintenance_Interface();
+
+			if (choice == 1)
+				CarType_Delete(&head2);
+			if (choice == 2)
+				CarInfo_Delete(&head1);
+			if (choice == 3)
+				OrderInfo_Delete(&head1);
+			if (choice == 0)
+				goto start;
+			goto start;
+		}   //点击数据删除按钮时
+
+		else if (x >= 150 && x <= 390 && y >= 240 && y <= 270 && down)
+		{
+			cleardevice();
+			choice = DataSeek_Interface();
+
+			if (choice == 1)
+				CarType_Seek(&head2, &head1);
+			if (choice == 2)
+				CarInfo_Seek(&head1);
+			if (choice == 3)
+				OrderInfo_Seek(&head1);
+			if (choice == 0)
+				goto start;
+			goto start;
+		}   //点击数据查找按钮时
+
+		else if (x >= 150 && x <= 390 && y >= 290 && y <= 320 && down)
+		{
+			cleardevice();
+			choice = Statistics_Interface();
+
+			if (choice == 1)
+				Type_Statistics(&head1, &head2);
+			if (choice == 2)
+				Type_Turnover(&head1, &head2);
+			if (choice == 3)
+				Car_Turnover(&head1);
+			if (choice == 4)
+				RentalDays(&head1);
+			if (choice == 5)
+				CarType_Rate(&head1, &head2);
+			if (choice == 0)
+				goto start;
+			goto start;
+		}   //点击数据统计按钮时
+
+		else if (x >= 150 && x <= 390 && y >= 340 && y <= 370 && down)
+		{
+		    DataImport(&head1, &head2);
+			SaveData(&head1, &head2);
+			goto start;
+        }    //点击数据导入按钮时
+
+		else if (x >= 10 && x <= 90 && y >= 480 && y <= 520 && down)
+		{
+			if (SaveData(&head1, &head2) == 1)
+			{
+				setfont(20, 0, "华文行楷");
+				setbkmode(TRANSPARENT);
+				outtextxy(210, 450, "数据保存成功！");
+			}
+			else {
+				setfont(20, 0, "华文行楷");
+				setbkmode(TRANSPARENT);
+				outtextxy(210, 450, "数据保存成功！");
+			}
+			getch();
+			goto start;
+		}   //点击保存按钮时
+
+		else if (x >= 390 && x <= 470 && y >= 480 && y <= 520 && down)
+		{
+		    closegraph();
+			exit(0);
+		}  //点击退出按钮时
+		else;
+	}
+	getch();
+	return 0;
+}
